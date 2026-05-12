@@ -1,0 +1,60 @@
+#include <stdio.h>
+#include <stdint.h>
+#include <stdlib.h>
+
+#include "disassembler.h"
+#include "ProcessorInstructions.h"
+#include "cpu.h"
+
+int main(){
+
+	flags f = {0};
+
+	options op = {.flags = &f, .memory = calloc(65536, sizeof(uint8_t)), .sp = 0xF000};
+
+	//Reading from roms
+	
+	FILE *file = fopen("roms/TST8080.COM", "rb");
+
+	int byteRoms;
+	int count = 0x0100;
+
+	while((byteRoms = fgetc(file)) != EOF)
+	{
+		op.memory[count] = byteRoms;
+		count++;
+	}
+
+	fclose(file);
+
+	op.pc = 0x0100;
+
+	while(1){
+			if(op.pc ==  0x0000)
+				break;
+
+		if(op.pc == 0x0005)
+		{
+			if(op.c == 9)
+			{
+				uint16_t adr = op.e | (op.d << 8);
+
+				while(op.memory[adr] != '$')
+				{
+					putchar(op.memory[adr]);
+					adr++;
+				}
+				printf("\n");
+			}
+
+			uint16_t sp = op.sp;
+			op.pc = op.memory[sp] | (op.memory[sp + 1] << 8);
+			op.sp += 2;
+			continue;
+		}
+
+		Instructions(&op);
+	}
+
+	return 0;
+}
