@@ -645,7 +645,7 @@ int disassembler(unsigned char* ram, int pc)  {
 			opbytes = 3;
 			break;
 		case 0xcd:
-			printf("CALL #$%02X%02X", code[1], code[1]);
+			printf("CALL #$%02X%02X", code[2], code[1]);
 			opbytes = 3;
 			break;
 		case 0xce:

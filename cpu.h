@@ -28,6 +28,7 @@
 		struct flags *flags;
 		uint8_t ie;
 		uint8_t  hal;
+		int cycles;
 	};
 
 	typedef struct options options;
