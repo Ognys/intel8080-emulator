@@ -1521,7 +1521,15 @@ void Instructions(options *optionsCPU){
 		case 0xd3:{
 			optionsCPU->cycles = 10;
 			uint8_t port = optionsCPU->memory[optionsCPU->pc +1];
-			optionsCPU->ports[port] = optionsCPU->a;
+			switch(port)
+			{
+				case 2:
+					optionsCPU->so = optionsCPU->a & 0x07;
+					break;
+				case 4:
+					optionsCPU->sr = (optionsCPU->a << 8) | (optionsCPU->sr >> 8);
+					break;
+			}
 			optionsCPU->pc += 1;
 			break;}
 		case 0xd4:{
@@ -1596,7 +1604,15 @@ void Instructions(options *optionsCPU){
 		case 0xdb:{
 			optionsCPU->cycles = 10;
 			uint8_t port = optionsCPU->memory[optionsCPU->pc +1];
-			optionsCPU->a = optionsCPU->ports[port];
+			switch(port)
+			{
+				case 3:
+					optionsCPU->a = (optionsCPU->sr >> (8 - optionsCPU->so)) & 0xff;
+					break;
+				default:
+					optionsCPU->a = optionsCPU->ports[port];
+					break;
+			}
 			optionsCPU->pc += 1;
 			break;}
 		case 0xdc:{

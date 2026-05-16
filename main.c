@@ -47,7 +47,56 @@ int main(){
 
 	int cycles = 0;
 
+	SDL_Event event;
+	int ine_num = 1;
+
 	while(1){
+		while(SDL_PollEvent(&event))
+		{
+			if(event.type == SDL_QUIT)
+				return 0;
+
+			if(event.type == SDL_KEYDOWN)
+				switch(event.key.keysym.sym)
+				{
+					case SDLK_c:
+						op.ports[1] |= 0x01;
+						break;
+					case SDLK_SPACE:
+						op.ports[1] |= 0x04;
+						break;
+					case SDLK_a:
+						op.ports[1] |= 0x20;
+						break;
+					case SDLK_d:
+						op.ports[1] |= 0x40;
+						break;
+					case SDLK_w:
+						op.ports[1] |= 0x10;
+						break;
+				}
+
+			if(event.type == SDL_KEYUP)
+				switch(event.key.keysym.sym)
+				{
+					case SDLK_c:
+						op.ports[1] &= ~0x01;
+						break;
+					case SDLK_SPACE:
+						op.ports[1] &= ~0x04;
+						break;
+					case SDLK_a:
+						op.ports[1] &= ~0x20;
+						break;
+					case SDLK_d:
+						op.ports[1] &= ~0x40;
+						break;
+					case SDLK_w:
+						op.ports[1] &= ~0x10;
+						break;
+				}
+		}
+
 		/*
 			if(op.pc ==  0x0000)
 				break;
@@ -75,13 +124,29 @@ int main(){
 		}
 		*/
 
-		disassembler(op.memory,op.pc);
+		//disassembler(op.memory,op.pc);
 		Instructions(&op);
 		cycles += op.cycles;
 
 		if(cycles >= 33333)
 		{
 			cycles -= 33333;
+
+			if(op.ie)
+			{
+				op.ie = 0;
+				op.sp -= 2;
+
+				op.memory[op.sp] = op.pc & 0xff;
+				op.memory[op.sp + 1] = (op.pc >> 8) & 0xff;
+
+				op.pc = ine_num * 8;
+			}
+
+			if(ine_num == 1)
+				ine_num = 2;
+			else
+				ine_num = 1;
 
 	SDL_SetRenderDrawColor(renderer, 0,0,0,255);
 	SDL_RenderClear(renderer);
@@ -106,7 +171,7 @@ int main(){
 				}
 			}
 			SDL_RenderPresent(renderer);
-			SDL_Delay(16);
+			SDL_Delay(5);
 		}
 	}
 

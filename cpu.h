@@ -29,6 +29,8 @@
 		uint8_t ie;
 		uint8_t  hal;
 		int cycles;
+		uint16_t so;
+		uint16_t sr;
 	};
 
 	typedef struct options options;
