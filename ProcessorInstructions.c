@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include "cpu.h"
 
-void UnimplementedInstruction(options *optionsCPU){
+void UnimplementedInstruction(CPUstate *optionsCPU){
 	printf("Error:  Unimplemented instruction $%02X", optionsCPU->memory[optionsCPU->pc]);
 	exit(1);
 }
@@ -38,7 +38,7 @@ void FlagOptimizationZSP(flags* f, uint8_t res)
 }
 
 
-void Instructions(options *optionsCPU){
+void Instructions(CPUstate *optionsCPU){
 
 	uint8_t *opcode = &optionsCPU->memory[optionsCPU->pc];
 

@@ -3,8 +3,8 @@
 
 #include "cpu.h"
 
-void UnimplementedInstruction(options* optionsCPU);
+void UnimplementedInstruction(CPUstate* optionsCPU);
 
-void Instructions(options* optionsCPU);
+void Instructions(CPUstate* optionsCPU);
 
 #endif

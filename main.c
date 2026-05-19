@@ -9,6 +9,8 @@
 
 int main(){
 
+	//SDL initialization
+
 	SDL_Window* window = NULL;
 	SDL_Renderer* renderer = NULL;
 
@@ -20,9 +22,16 @@ int main(){
 	SDL_RenderClear(renderer);
 	SDL_SetRenderDrawColor(renderer, 255,255,255,255);
 
+	//initialize processor structure
+
 	flags f = {0};
 
-	options op = {.flags = &f, .memory = calloc(65536, sizeof(uint8_t)),.ports = calloc(256, sizeof(uint8_t)) ,.sp = 0xF000};
+	CPUstate op = {
+		.flags = &f,
+		.memory = calloc(65536, sizeof(uint8_t)),
+		.ports = calloc(256, sizeof(uint8_t)),
+		.sp = 0xF000
+	};
 
 	//Reading from roms
 	
@@ -30,20 +39,19 @@ int main(){
 
 	if(file == NULL)
 	{
-		printf("file no");
+		printf("File not found\n");
 		exit(1);
 	}
 
-	int byteRoms;
-	int count = 0;
+	fseek(file, 0, SEEK_END);
+	long file_size = ftell(file);
+	rewind(file);
 
-	while((byteRoms = fgetc(file)) != EOF)
-	{
-		op.memory[count] = byteRoms;
-		count++;
-	}
+	fread(&op.memory[0], 1, file_size, file);
 
 	fclose(file);
+
+	//
 
 	int cycles = 0;
 
