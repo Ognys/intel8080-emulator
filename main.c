@@ -27,7 +27,7 @@ int main(){
 
 	flags f = {0};
 
-	CPUstate op = {
+	CPUstate cs = {
 		.flags = &f,
 		.memory = calloc(65536, sizeof(uint8_t)),
 		.ports = calloc(256, sizeof(uint8_t)),
@@ -48,20 +48,20 @@ int main(){
 	long file_size = ftell(file);
 	rewind(file);
 
-	fread(&op.memory[0], 1, file_size, file);
+	fread(&cs.memory[0], 1, file_size, file);
 
 	fclose(file);
 
-	//
+	//cycle parameters
 
 	int cycles = 0;
-
+	int interrupt_cycles = 0;
+	uint32_t frame_start = SDL_GetTicks();
 	SDL_Event event;
 	int ine_num = 1;
 
 	while(1){
 
-		uint32_t frame_start = SDL_GetTicks();
 
 		while(SDL_PollEvent(&event))
 		{
@@ -72,19 +72,19 @@ int main(){
 				switch(event.key.keysym.sym)
 				{
 					case SDLK_c:
-						op.ports[1] |= 0x01;
+						cs.ports[1] |= 0x01;
 						break;
 					case SDLK_SPACE:
-						op.ports[1] |= 0x04;
+						cs.ports[1] |= 0x04;
 						break;
 					case SDLK_a:
-						op.ports[1] |= 0x20;
+						cs.ports[1] |= 0x20;
 						break;
 					case SDLK_d:
-						op.ports[1] |= 0x40;
+						cs.ports[1] |= 0x40;
 						break;
 					case SDLK_w:
-						op.ports[1] |= 0x10;
+						cs.ports[1] |= 0x10;
 						break;
 				}
 
@@ -92,48 +92,57 @@ int main(){
 				switch(event.key.keysym.sym)
 				{
 					case SDLK_c:
-						op.ports[1] &= ~0x01;
+						cs.ports[1] &= ~0x01;
 						break;
 					case SDLK_SPACE:
-						op.ports[1] &= ~0x04;
+						cs.ports[1] &= ~0x04;
 						break;
 					case SDLK_a:
-						op.ports[1] &= ~0x20;
+						cs.ports[1] &= ~0x20;
 						break;
 					case SDLK_d:
-						op.ports[1] &= ~0x40;
+						cs.ports[1] &= ~0x40;
 						break;
 					case SDLK_w:
-						op.ports[1] &= ~0x10;
+						cs.ports[1] &= ~0x10;
 						break;
 				}
 		}
 
-		test8080(&op, 0);
+		test8080(&cs, 0);
 
-		//disassembler(op.memory,op.pc);
-		Instructions(&op);
-		cycles += op.cycles;
+		//disassembler(cs.memory,cs.pc);
+		Instructions(&cs);
+		cycles += cs.cycles;
+		interrupt_cycles += cs.cycles;
 
-		if(cycles >= 33333)
+		if(interrupt_cycles >= 16666)
 		{
-			cycles -= 33333;
 
-			if(op.ie)
+			if(cs.ie)
 			{
-				op.ie = 0;
-				op.sp -= 2;
+				cs.ie = 0;
+				cs.sp -= 2;
 
-				op.memory[op.sp] = op.pc & 0xff;
-				op.memory[op.sp + 1] = (op.pc >> 8) & 0xff;
+				cs.memory[cs.sp] = cs.pc & 0xff;
+				cs.memory[cs.sp + 1] = (cs.pc >> 8) & 0xff;
 
-				op.pc = ine_num * 8;
+				cs.pc = ine_num * 8;
 			}
+
+			interrupt_cycles -= 16666;
 
 			if(ine_num == 1)
 				ine_num = 2;
 			else
 				ine_num = 1;
+
+		}
+
+		if(cycles >= 33333)
+		{
+			cycles -= 33333;
+
 
 	SDL_SetRenderDrawColor(renderer, 0,0,0,255);
 	SDL_RenderClear(renderer);
@@ -142,7 +151,7 @@ int main(){
 			{
 				for(int x_byte = 0; x_byte < 32; x_byte++)
 				{
-					uint8_t byte = op.memory[0x2400 + y * 32 + x_byte];
+					uint8_t byte = cs.memory[0x2400 + y * 32 + x_byte];
 					for(int bit = 0; bit < 8; bit++)
 					{
 						int x = x_byte * 8 + bit;
@@ -163,6 +172,8 @@ int main(){
 
 			if(now_frame < 16)
 				SDL_Delay(16 - now_frame);
+
+			frame_start = SDL_GetTicks();
 		}
 	}
 
