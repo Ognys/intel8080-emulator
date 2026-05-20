@@ -6,6 +6,7 @@
 #include "disassembler.h"
 #include "ProcessorInstructions.h"
 #include "cpu.h"
+#include "testFunc.h"
 
 int main(){
 
@@ -59,6 +60,9 @@ int main(){
 	int ine_num = 1;
 
 	while(1){
+
+		uint32_t frame_start = SDL_GetTicks();
+
 		while(SDL_PollEvent(&event))
 		{
 			if(event.type == SDL_QUIT)
@@ -105,32 +109,7 @@ int main(){
 				}
 		}
 
-		/*
-			if(op.pc ==  0x0000)
-				break;
-
-		if(op.pc == 0x0005)
-		{
-			if(op.c == 2)
-				putchar(op.e);
-			else if(op.c == 9)
-			{
-				uint16_t adr = op.e | (op.d << 8);
-
-				while(op.memory[adr] != '$')
-				{
-					putchar(op.memory[adr]);
-					adr++;
-				}
-				printf("\n");
-			}
-
-			uint16_t sp = op.sp;
-			op.pc = op.memory[sp] | (op.memory[sp + 1] << 8);
-			op.sp += 2;
-			continue;
-		}
-		*/
+		test8080(&op, 0);
 
 		//disassembler(op.memory,op.pc);
 		Instructions(&op);
@@ -179,7 +158,11 @@ int main(){
 				}
 			}
 			SDL_RenderPresent(renderer);
-			SDL_Delay(5);
+
+			uint32_t now_frame = SDL_GetTicks() - frame_start;
+
+			if(now_frame < 16)
+				SDL_Delay(16 - now_frame);
 		}
 	}
 
