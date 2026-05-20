@@ -26,7 +26,7 @@
 		uint8_t *memory;
 		uint8_t  *ports;
 		struct flags *flags;
-		uint8_t ie;
+		uint8_t interrupt_enabled;
 		uint8_t  hal;
 		int cycles;
 		uint16_t so;

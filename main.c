@@ -58,7 +58,8 @@ int main(){
 	int interrupt_cycles = 0;
 	uint32_t frame_start = SDL_GetTicks();
 	SDL_Event event;
-	int ine_num = 1;
+	int interrupt_number = 1;
+	_Bool isDebug = 0;
 
 	while(1){
 
@@ -111,7 +112,8 @@ int main(){
 
 		test8080(&cs, 0);
 
-		//disassembler(cs.memory,cs.pc);
+		if(isDebug)
+			disassembler(cs.memory,cs.pc);
 		Instructions(&cs);
 		cycles += cs.cycles;
 		interrupt_cycles += cs.cycles;
@@ -119,23 +121,20 @@ int main(){
 		if(interrupt_cycles >= 16666)
 		{
 
-			if(cs.ie)
+			if(cs.interrupt_enabled)
 			{
-				cs.ie = 0;
+				cs.interrupt_enabled = 0;
 				cs.sp -= 2;
 
 				cs.memory[cs.sp] = cs.pc & 0xff;
 				cs.memory[cs.sp + 1] = (cs.pc >> 8) & 0xff;
 
-				cs.pc = ine_num * 8;
+				cs.pc = interrupt_number * 8;
 			}
 
 			interrupt_cycles -= 16666;
 
-			if(ine_num == 1)
-				ine_num = 2;
-			else
-				ine_num = 1;
+			interrupt_number = interrupt_number == 1 ? 2 : 1;
 
 		}
 

@@ -1854,7 +1854,7 @@ void Instructions(CPUstate *optionsCPU){
 			break;}
 		case 0xf3:
 			optionsCPU->cycles = 4;
-			optionsCPU->ie = 0;
+			optionsCPU->interrupt_enabled = 0;
 			break;
 		case 0xf4:{
 			optionsCPU->cycles = 11;
@@ -1934,7 +1934,7 @@ void Instructions(CPUstate *optionsCPU){
 			break;}
 		case 0xfb:
 			optionsCPU->cycles = 4;
-			optionsCPU->ie = 1;
+			optionsCPU->interrupt_enabled = 1;
 			break;
 		case 0xfc:{
 			optionsCPU->cycles = 11;
