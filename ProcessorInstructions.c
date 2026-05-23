@@ -3,8 +3,8 @@
 #include <stdlib.h>
 #include "cpu.h"
 
-void UnimplementedInstruction(CPUstate *optionsCPU){
-	printf("Error:  Unimplemented instruction $%02X", optionsCPU->memory[optionsCPU->pc]);
+void UnimplementedInstruction(CPUstate *cs){
+	printf("Error:  Unimplemented instruction $%02X", cs->memory[cs->pc]);
 	exit(1);
 }
 
@@ -38,1946 +38,1946 @@ void FlagOptimizationZSP(flags* f, uint8_t res)
 }
 
 
-void Instructions(CPUstate *optionsCPU){
+void Instructions(CPUstate *cs){
 
-	uint8_t *opcode = &optionsCPU->memory[optionsCPU->pc];
+	uint8_t *opcode = &cs->memory[cs->pc];
 
 	switch(*opcode){
 		case 0x00:
-			optionsCPU->cycles = 4;
+			cs->cycles = 4;
 			break;
 		case 0x01:
-			optionsCPU->cycles = 10;
-			optionsCPU->b = opcode[2];
-			optionsCPU->c = opcode[1];
-			optionsCPU->pc += 2;
+			cs->cycles = 10;
+			cs->b = opcode[2];
+			cs->c = opcode[1];
+			cs->pc += 2;
 			break;
 		case 0x02:{
-			optionsCPU->cycles = 7;
-			uint16_t adr = (optionsCPU->b << 8) | optionsCPU->c;
-			optionsCPU->memory[adr] = optionsCPU->a;
+			cs->cycles = 7;
+			uint16_t adr = (cs->b << 8) | cs->c;
+			cs->memory[adr] = cs->a;
 			break;}
 		case 0x03:{
-			optionsCPU->cycles = 5;
-			uint16_t BC = (optionsCPU->b << 8) | optionsCPU->c;
+			cs->cycles = 5;
+			uint16_t BC = (cs->b << 8) | cs->c;
 			BC++;
-			optionsCPU->b = (BC >> 8) & 0xFF;
-			optionsCPU->c = BC & 0xFF;
+			cs->b = (BC >> 8) & 0xFF;
+			cs->c = BC & 0xFF;
 			break;}
 		case 0x04:{
-			optionsCPU->cycles = 5;
-			optionsCPU->b += 1;
+			cs->cycles = 5;
+			cs->b += 1;
 
-			optionsCPU->flags->ac = (optionsCPU->b & 0xf) == 0xf;
-			ResetFlagsToZeroZSP(optionsCPU->flags);
-			FlagOptimizationZSP(optionsCPU->flags,optionsCPU->b);
+			cs->flags->ac = (cs->b & 0xf) == 0xf;
+			ResetFlagsToZeroZSP(cs->flags);
+			FlagOptimizationZSP(cs->flags,cs->b);
 			break;}
 		case 0x05:{
-			optionsCPU->cycles = 5;
-			optionsCPU->b -= 1;
+			cs->cycles = 5;
+			cs->b -= 1;
 
-			optionsCPU->flags->ac = (optionsCPU->b & 0x0F) == 0x0;
-			ResetFlagsToZeroZSP(optionsCPU->flags);
-			FlagOptimizationZSP(optionsCPU->flags, optionsCPU->b);
+			cs->flags->ac = (cs->b & 0x0F) == 0x0;
+			ResetFlagsToZeroZSP(cs->flags);
+			FlagOptimizationZSP(cs->flags, cs->b);
 			break;}
 		case 0x06:
-			optionsCPU->cycles = 7;
-			optionsCPU->b = optionsCPU->memory[(optionsCPU->pc)+ 1];
-			optionsCPU->pc++;
+			cs->cycles = 7;
+			cs->b = cs->memory[(cs->pc)+ 1];
+			cs->pc++;
 			break;
 		case 0x07:{
-			optionsCPU->cycles = 4;
-			optionsCPU->flags->cy = 0;
-			uint8_t temp_byte = optionsCPU->a & 0b10000000;
-			optionsCPU->a <<= 1;
+			cs->cycles = 4;
+			cs->flags->cy = 0;
+			uint8_t temp_byte = cs->a & 0b10000000;
+			cs->a <<= 1;
 			temp_byte >>= 7;
-			optionsCPU->a = optionsCPU->a | temp_byte;
+			cs->a = cs->a | temp_byte;
 			if(temp_byte)
-				optionsCPU->flags->cy =  1;
+				cs->flags->cy =  1;
 			break;}
 		case 0x08:
-			optionsCPU->cycles = 4;
+			cs->cycles = 4;
 			break;
 		case 0x09:{
-			optionsCPU->cycles = 10;
-			uint16_t HL =(optionsCPU->h << 8) | optionsCPU->l;
-			uint16_t BC = (optionsCPU->b << 8) | optionsCPU->c;
+			cs->cycles = 10;
+			uint16_t HL =(cs->h << 8) | cs->l;
+			uint16_t BC = (cs->b << 8) | cs->c;
 			uint32_t res_hl = HL + BC;
 
-			optionsCPU->h = res_hl >> 8;
-			optionsCPU->l = res_hl;
+			cs->h = res_hl >> 8;
+			cs->l = res_hl;
 
-			optionsCPU->flags->cy = res_hl > 0xFFFF;
+			cs->flags->cy = res_hl > 0xFFFF;
 			break;}
 		case 0x0a:{
-			optionsCPU->cycles = 7;
-			uint16_t adr = (optionsCPU->b << 8) | optionsCPU->c;
-			optionsCPU->a = optionsCPU->memory[adr];
+			cs->cycles = 7;
+			uint16_t adr = (cs->b << 8) | cs->c;
+			cs->a = cs->memory[adr];
 			break;}
 		case 0x0b:{
-			optionsCPU->cycles = 5;
-			uint16_t BC = (optionsCPU->b << 8) | optionsCPU->c;
+			cs->cycles = 5;
+			uint16_t BC = (cs->b << 8) | cs->c;
 			BC -= 1;
 
-			optionsCPU->b = BC >> 8;
-			optionsCPU->c = BC;
+			cs->b = BC >> 8;
+			cs->c = BC;
 			break;}
 		case 0x0c:
-			optionsCPU->cycles = 5;
-			optionsCPU->c++;
+			cs->cycles = 5;
+			cs->c++;
 
-			ResetFlagsToZeroZSP(optionsCPU->flags);
-			optionsCPU->flags->ac = (optionsCPU->c & 0xf) == 0xf;
-			FlagOptimizationZSP(optionsCPU->flags, optionsCPU->c);
+			ResetFlagsToZeroZSP(cs->flags);
+			cs->flags->ac = (cs->c & 0xf) == 0xf;
+			FlagOptimizationZSP(cs->flags, cs->c);
 			break;
 		case 0x0d:
-			optionsCPU->cycles = 5;
-			optionsCPU->c--;
+			cs->cycles = 5;
+			cs->c--;
 
-			ResetFlagsToZeroZSP(optionsCPU->flags);
-			optionsCPU->flags->ac = (optionsCPU->c & 0x0F) == 0x0;
-			FlagOptimizationZSP(optionsCPU->flags, optionsCPU->c);
+			ResetFlagsToZeroZSP(cs->flags);
+			cs->flags->ac = (cs->c & 0x0F) == 0x0;
+			FlagOptimizationZSP(cs->flags, cs->c);
 			break;
 		case 0x0e:
-			optionsCPU->cycles = 7;
-			optionsCPU->c = optionsCPU->memory[++optionsCPU->pc];
+			cs->cycles = 7;
+			cs->c = cs->memory[++cs->pc];
 			break;
 		case 0x0f:{
-			optionsCPU->cycles = 4;
-			optionsCPU->flags->cy = (optionsCPU->a & 1) == 1;
-			uint8_t temp_byte = (optionsCPU->a << 7) & 0b10000000;
-			optionsCPU->a = (optionsCPU->a >> 1) | temp_byte;
+			cs->cycles = 4;
+			cs->flags->cy = (cs->a & 1) == 1;
+			uint8_t temp_byte = (cs->a << 7) & 0b10000000;
+			cs->a = (cs->a >> 1) | temp_byte;
 			break;}
 		case 0x10:
-			optionsCPU->cycles = 4;
+			cs->cycles = 4;
 			break;
 		case 0x11:
-			optionsCPU->cycles = 10;
-			optionsCPU->e = optionsCPU->memory[++optionsCPU->pc];
-			optionsCPU->d = optionsCPU->memory[++optionsCPU->pc];
+			cs->cycles = 10;
+			cs->e = cs->memory[++cs->pc];
+			cs->d = cs->memory[++cs->pc];
 			break;
 		case 0x12:{
-			optionsCPU->cycles = 7;
-			uint16_t adr = (optionsCPU->d << 8) | optionsCPU->e;
-			optionsCPU->memory[adr] = optionsCPU->a;
+			cs->cycles = 7;
+			uint16_t adr = (cs->d << 8) | cs->e;
+			cs->memory[adr] = cs->a;
 			break;}
 		case 0x13:{
-			optionsCPU->cycles = 5;
-			uint16_t DE = (optionsCPU->d << 8) | optionsCPU->e;
+			cs->cycles = 5;
+			uint16_t DE = (cs->d << 8) | cs->e;
 			DE++;
-			optionsCPU->d = DE >> 8;
-			optionsCPU->e = DE;
+			cs->d = DE >> 8;
+			cs->e = DE;
 			break;}
 		case 0x14:
-			optionsCPU->cycles = 5;
-			optionsCPU->d++;
+			cs->cycles = 5;
+			cs->d++;
 
-			optionsCPU->flags->ac = (optionsCPU->b & 0xf) == 0xf;
-			ResetFlagsToZeroZSP(optionsCPU->flags);
-			FlagOptimizationZSP(optionsCPU->flags, optionsCPU->d);
+			cs->flags->ac = (cs->b & 0xf) == 0xf;
+			ResetFlagsToZeroZSP(cs->flags);
+			FlagOptimizationZSP(cs->flags, cs->d);
 			break;
 		case 0x15:
-			optionsCPU->cycles = 5;
-			optionsCPU->d--;
+			cs->cycles = 5;
+			cs->d--;
 
-			optionsCPU->flags->ac = (optionsCPU->d & 0x0F) == 0x00;
-			ResetFlagsToZeroZSP(optionsCPU->flags);
-			FlagOptimizationZSP(optionsCPU->flags, optionsCPU->d);
+			cs->flags->ac = (cs->d & 0x0F) == 0x00;
+			ResetFlagsToZeroZSP(cs->flags);
+			FlagOptimizationZSP(cs->flags, cs->d);
 			break;
 		case 0x16:
-			optionsCPU->cycles = 7;
-			optionsCPU->d = optionsCPU->memory[++optionsCPU->pc];
+			cs->cycles = 7;
+			cs->d = cs->memory[++cs->pc];
 			break;
 		case 0x17:{
-			optionsCPU->cycles = 4;
-			uint8_t temp_byte = optionsCPU->flags->cy;
-			optionsCPU->flags->cy = (optionsCPU->a >> 7) & 0x01;
-			optionsCPU->a = (optionsCPU->a << 1) | temp_byte;
+			cs->cycles = 4;
+			uint8_t temp_byte = cs->flags->cy;
+			cs->flags->cy = (cs->a >> 7) & 0x01;
+			cs->a = (cs->a << 1) | temp_byte;
 			break;}
 		case 0x18:
-			optionsCPU->cycles = 4;
+			cs->cycles = 4;
 			break;
 		case 0x19:{
-			optionsCPU->cycles = 10;
-			uint16_t HL = (optionsCPU->h << 8) | optionsCPU->l;
-			uint16_t DE = (optionsCPU->d << 8) | optionsCPU->e;
+			cs->cycles = 10;
+			uint16_t HL = (cs->h << 8) | cs->l;
+			uint16_t DE = (cs->d << 8) | cs->e;
 			uint32_t res = HL + DE;
 
-			optionsCPU->h = res >> 8;
-			optionsCPU->l = res;
+			cs->h = res >> 8;
+			cs->l = res;
 
-			optionsCPU->flags->cy = res > 0xFFFF;
+			cs->flags->cy = res > 0xFFFF;
 			break;}
 		case 0x1a:{
-			optionsCPU->cycles = 7;
-			uint16_t adr = (optionsCPU->d << 8) | optionsCPU->e;
-			optionsCPU->a = optionsCPU->memory[adr];
+			cs->cycles = 7;
+			uint16_t adr = (cs->d << 8) | cs->e;
+			cs->a = cs->memory[adr];
 			break;}
 		case 0x1b:{
-			optionsCPU->cycles = 5;
-			uint16_t DE = (optionsCPU->d << 8) | optionsCPU->e;
+			cs->cycles = 5;
+			uint16_t DE = (cs->d << 8) | cs->e;
 			DE-=1;
-			optionsCPU->d = DE >> 8;
-			optionsCPU->e = DE;
+			cs->d = DE >> 8;
+			cs->e = DE;
 			break;}
 		case 0x1c:
-			optionsCPU->cycles = 5;
-			optionsCPU->e += 1;
+			cs->cycles = 5;
+			cs->e += 1;
 
-			optionsCPU->flags->ac = (optionsCPU->e & 0xf) == 0xf;
-			ResetFlagsToZeroZSP(optionsCPU->flags);
-			FlagOptimizationZSP(optionsCPU->flags, optionsCPU->e);
+			cs->flags->ac = (cs->e & 0xf) == 0xf;
+			ResetFlagsToZeroZSP(cs->flags);
+			FlagOptimizationZSP(cs->flags, cs->e);
 			break;
 		case 0x1d:
-			optionsCPU->cycles = 5;
-			optionsCPU->e -= 1;
+			cs->cycles = 5;
+			cs->e -= 1;
 
-			optionsCPU->flags->ac = (optionsCPU->e & 0x0F) == 0x0;
-			ResetFlagsToZeroZSP(optionsCPU->flags);
-			FlagOptimizationZSP(optionsCPU->flags, optionsCPU->e);
+			cs->flags->ac = (cs->e & 0x0F) == 0x0;
+			ResetFlagsToZeroZSP(cs->flags);
+			FlagOptimizationZSP(cs->flags, cs->e);
 			break;
 		case 0x1e:
-			optionsCPU->cycles = 7;
-			optionsCPU->e = optionsCPU->memory[++optionsCPU->pc];
+			cs->cycles = 7;
+			cs->e = cs->memory[++cs->pc];
 			break;
 		case 0x1f:{
-			optionsCPU->cycles = 4;
-			uint8_t temp_byte = optionsCPU->flags->cy << 7;
-			optionsCPU->flags->cy = optionsCPU->a & 0x01;
-			optionsCPU->a = (optionsCPU->a >> 1) | temp_byte;
+			cs->cycles = 4;
+			uint8_t temp_byte = cs->flags->cy << 7;
+			cs->flags->cy = cs->a & 0x01;
+			cs->a = (cs->a >> 1) | temp_byte;
 			break;}
 		case 0x20:
-			optionsCPU->cycles = 4;
+			cs->cycles = 4;
 			break;
 		case 0x21:
-			optionsCPU->cycles = 10;
-			optionsCPU->l = optionsCPU->memory[++optionsCPU->pc];
-			optionsCPU->h = optionsCPU->memory[++optionsCPU->pc];
+			cs->cycles = 10;
+			cs->l = cs->memory[++cs->pc];
+			cs->h = cs->memory[++cs->pc];
 			break;
 		case 0x22:{
-			optionsCPU->cycles = 16;
-			uint16_t pc = optionsCPU->pc;
-			uint16_t adr = ((optionsCPU->memory[pc + 2]) << 8) | optionsCPU->memory[pc + 1];
-			optionsCPU->memory[adr] = optionsCPU->l;
-			optionsCPU->memory[adr + 1] = optionsCPU->h;
-			optionsCPU->pc += 2;
+			cs->cycles = 16;
+			uint16_t pc = cs->pc;
+			uint16_t adr = ((cs->memory[pc + 2]) << 8) | cs->memory[pc + 1];
+			cs->memory[adr] = cs->l;
+			cs->memory[adr + 1] = cs->h;
+			cs->pc += 2;
 			break;}
 		case 0x23:{
-			optionsCPU->cycles = 5;
-			uint16_t HL = (optionsCPU->h << 8) | optionsCPU->l;
+			cs->cycles = 5;
+			uint16_t HL = (cs->h << 8) | cs->l;
 			HL += 1;
-			optionsCPU->h = HL >> 8;
-			optionsCPU->l = HL;
+			cs->h = HL >> 8;
+			cs->l = HL;
 			break;}
 		case 0x24:
-			optionsCPU->cycles = 5;
-			optionsCPU->h += 1;
+			cs->cycles = 5;
+			cs->h += 1;
 
-			optionsCPU->flags->ac = (optionsCPU->h & 0xf) == 0xf;
-			ResetFlagsToZeroZSP(optionsCPU->flags);
-			FlagOptimizationZSP(optionsCPU->flags, optionsCPU->h);
+			cs->flags->ac = (cs->h & 0xf) == 0xf;
+			ResetFlagsToZeroZSP(cs->flags);
+			FlagOptimizationZSP(cs->flags, cs->h);
 			break;
 		case 0x25:
-			optionsCPU->cycles = 5;
-			optionsCPU->h -= 1;
-			optionsCPU->flags->ac = (optionsCPU->h & 0x0F) == 0x0;
-			ResetFlagsToZeroZSP(optionsCPU->flags);
-			FlagOptimizationZSP(optionsCPU->flags, optionsCPU->h);
+			cs->cycles = 5;
+			cs->h -= 1;
+			cs->flags->ac = (cs->h & 0x0F) == 0x0;
+			ResetFlagsToZeroZSP(cs->flags);
+			FlagOptimizationZSP(cs->flags, cs->h);
 			break;
 		case 0x26:{
-			optionsCPU->cycles = 7;
-			uint8_t nb = optionsCPU->memory[optionsCPU->pc + 1];
-			optionsCPU->h = nb;
-			optionsCPU->pc += 1;
+			cs->cycles = 7;
+			uint8_t nb = cs->memory[cs->pc + 1];
+			cs->h = nb;
+			cs->pc += 1;
 			break;}
 		case 0x27:{
-			optionsCPU->cycles = 4;
-			uint16_t temp_a = optionsCPU->a;
+			cs->cycles = 4;
+			uint16_t temp_a = cs->a;
 			uint8_t old_a = temp_a;
 			uint8_t add = 0;
 
-			if((temp_a & 0x0F) > 9 || optionsCPU->flags->ac)
+			if((temp_a & 0x0F) > 9 || cs->flags->ac)
 			{
 				add += 0x06;
 				temp_a += 0x06;
 			}
 
-			if((temp_a >> 4) > 9 ||  optionsCPU->flags->cy)
+			if((temp_a >> 4) > 9 ||  cs->flags->cy)
 			{
 				temp_a += 0x60;
-				optionsCPU->flags->cy = 1;
+				cs->flags->cy = 1;
 			}
 
-			optionsCPU->a = temp_a;
-			ResetFlagsToZeroZSP(optionsCPU->flags);
-			FlagOptimizationZSP(optionsCPU->flags, optionsCPU->a);
-			optionsCPU->flags->ac = ((old_a & 0x0F) +(add & 0x0F)) > 0x0F;
+			cs->a = temp_a;
+			ResetFlagsToZeroZSP(cs->flags);
+			FlagOptimizationZSP(cs->flags, cs->a);
+			cs->flags->ac = ((old_a & 0x0F) +(add & 0x0F)) > 0x0F;
 
 			break;}
 		case 0x28:
-			optionsCPU->cycles = 4;
+			cs->cycles = 4;
 			break;
 		case 0x29:{
-			optionsCPU->cycles = 10;
-			uint32_t HL =  (optionsCPU->h << 8) | optionsCPU->l;
+			cs->cycles = 10;
+			uint32_t HL =  (cs->h << 8) | cs->l;
 			HL += HL;
-			optionsCPU->h = HL >> 8;
-			optionsCPU->l = HL;
-			optionsCPU->flags->cy = HL > 0xFFFF;
+			cs->h = HL >> 8;
+			cs->l = HL;
+			cs->flags->cy = HL > 0xFFFF;
 			break;}
 		case 0x2a:{
-			optionsCPU->cycles = 16;
-			uint16_t pc = optionsCPU->pc;
-			uint16_t adr = (optionsCPU->memory[pc + 2] << 8) | optionsCPU->memory[pc + 1];
-			optionsCPU->l = optionsCPU->memory[adr];
-			optionsCPU->h = optionsCPU->memory[adr + 1];
-			optionsCPU->pc += 2;
+			cs->cycles = 16;
+			uint16_t pc = cs->pc;
+			uint16_t adr = (cs->memory[pc + 2] << 8) | cs->memory[pc + 1];
+			cs->l = cs->memory[adr];
+			cs->h = cs->memory[adr + 1];
+			cs->pc += 2;
 			break;}
 		case 0x2b:{
-			optionsCPU->cycles = 5;
-			uint16_t HL = (optionsCPU->h << 8) | optionsCPU->l;
+			cs->cycles = 5;
+			uint16_t HL = (cs->h << 8) | cs->l;
 			HL -= 1;
-			optionsCPU->h = HL >> 8;
-			optionsCPU->l = HL;
+			cs->h = HL >> 8;
+			cs->l = HL;
 			break;}
 		case 0x2c:
-			optionsCPU->cycles = 5;
-			ResetFlagsToZeroZSP(optionsCPU->flags);
-			optionsCPU->flags->ac = ((optionsCPU->l & 0x0F) + 1) > 0x0F;
-			optionsCPU->l += 1;
-			FlagOptimizationZSP(optionsCPU->flags, optionsCPU->l);
+			cs->cycles = 5;
+			ResetFlagsToZeroZSP(cs->flags);
+			cs->flags->ac = ((cs->l & 0x0F) + 1) > 0x0F;
+			cs->l += 1;
+			FlagOptimizationZSP(cs->flags, cs->l);
 			break;
 		case 0x2d:
-			optionsCPU->cycles = 5;
-			ResetFlagsToZeroZSP(optionsCPU->flags);
-			optionsCPU->flags->ac = (optionsCPU->l & 0x0F) == 0x00;
-			optionsCPU->l -= 1;
-			FlagOptimizationZSP(optionsCPU->flags, optionsCPU->l);
+			cs->cycles = 5;
+			ResetFlagsToZeroZSP(cs->flags);
+			cs->flags->ac = (cs->l & 0x0F) == 0x00;
+			cs->l -= 1;
+			FlagOptimizationZSP(cs->flags, cs->l);
 			break;
 		case 0x2e:
-			optionsCPU->cycles = 7;
-			optionsCPU->l =optionsCPU->memory[++optionsCPU->pc];
+			cs->cycles = 7;
+			cs->l =cs->memory[++cs->pc];
 			break;
 		case 0x2f:
-			optionsCPU->cycles = 4;
-			optionsCPU->a = ~optionsCPU->a;
+			cs->cycles = 4;
+			cs->a = ~cs->a;
 			break;
 		case 0x30:
-			optionsCPU->cycles = 4;
+			cs->cycles = 4;
 			break;
 		case 0x31:{
-			optionsCPU->cycles = 10;
-			uint8_t low = optionsCPU->memory[++optionsCPU->pc];
-			uint8_t high = optionsCPU->memory[++optionsCPU->pc];
+			cs->cycles = 10;
+			uint8_t low = cs->memory[++cs->pc];
+			uint8_t high = cs->memory[++cs->pc];
 
-			optionsCPU->sp = (high << 8) | low;
+			cs->sp = (high << 8) | low;
 			break;}
 		case 0x32:{
-			optionsCPU->cycles = 13;
-			uint16_t pc = optionsCPU->pc;
-			uint16_t adr = (optionsCPU->memory[pc + 2] << 8) | optionsCPU->memory[pc + 1];
-			optionsCPU->memory[adr] = optionsCPU->a;
-			optionsCPU->pc += 2;
+			cs->cycles = 13;
+			uint16_t pc = cs->pc;
+			uint16_t adr = (cs->memory[pc + 2] << 8) | cs->memory[pc + 1];
+			cs->memory[adr] = cs->a;
+			cs->pc += 2;
 			break;}
 		case 0x33:
-			optionsCPU->cycles = 5;
-			optionsCPU->sp += 1;
+			cs->cycles = 5;
+			cs->sp += 1;
 			break;
 		case 0x34:{
-			optionsCPU->cycles = 10;
-			ResetFlagsToZeroZSP(optionsCPU->flags);
-			uint16_t adr = (optionsCPU->h << 8) | optionsCPU->l;
-			optionsCPU->flags->ac = ((optionsCPU->memory[adr] & 0x0F) + 1) > 0x0F;
-			optionsCPU->memory[adr] += 1;;
-			FlagOptimizationZSP(optionsCPU->flags, optionsCPU->memory[adr]);
+			cs->cycles = 10;
+			ResetFlagsToZeroZSP(cs->flags);
+			uint16_t adr = (cs->h << 8) | cs->l;
+			cs->flags->ac = ((cs->memory[adr] & 0x0F) + 1) > 0x0F;
+			cs->memory[adr] += 1;;
+			FlagOptimizationZSP(cs->flags, cs->memory[adr]);
 			break;}
 		case 0x35:{
-			optionsCPU->cycles = 10;
-			uint16_t adr = (optionsCPU->h << 8) | optionsCPU->l;
-			optionsCPU->memory[adr] -= 1;
-			optionsCPU->flags->ac = (optionsCPU->memory[adr] & 0x0F) == 0x00;
-			ResetFlagsToZeroZSP(optionsCPU->flags);
-			FlagOptimizationZSP(optionsCPU->flags, optionsCPU->memory[adr]);
+			cs->cycles = 10;
+			uint16_t adr = (cs->h << 8) | cs->l;
+			cs->memory[adr] -= 1;
+			cs->flags->ac = (cs->memory[adr] & 0x0F) == 0x00;
+			ResetFlagsToZeroZSP(cs->flags);
+			FlagOptimizationZSP(cs->flags, cs->memory[adr]);
 			break;}
 		case 0x36:{
-			optionsCPU->cycles = 10;
-			uint16_t adr = (optionsCPU->h << 8) | optionsCPU->l;
-			optionsCPU->memory[adr] = optionsCPU->memory[++optionsCPU->pc];
+			cs->cycles = 10;
+			uint16_t adr = (cs->h << 8) | cs->l;
+			cs->memory[adr] = cs->memory[++cs->pc];
 			break;}
 		case 0x37:
-			optionsCPU->cycles = 4;
-			optionsCPU->flags->cy = 1;
+			cs->cycles = 4;
+			cs->flags->cy = 1;
 			break;
 		case 0x38:
-			optionsCPU->cycles = 4;
+			cs->cycles = 4;
 			break;
 		case 0x39:{
-			optionsCPU->cycles = 10;
-			uint16_t HL = (optionsCPU->h << 8) | optionsCPU->l;
-			uint32_t res = HL + optionsCPU->sp;
-			optionsCPU->flags->cy = res > 0xFFFF;
-			optionsCPU->h = res >> 8;
-			optionsCPU->l = res;
+			cs->cycles = 10;
+			uint16_t HL = (cs->h << 8) | cs->l;
+			uint32_t res = HL + cs->sp;
+			cs->flags->cy = res > 0xFFFF;
+			cs->h = res >> 8;
+			cs->l = res;
 			break;}
 		case 0x3a:{
-			optionsCPU->cycles = 13;
-			uint16_t pc = optionsCPU->pc;
-			uint16_t adr  = (optionsCPU->memory[pc + 2] << 8) | optionsCPU->memory[pc + 1];
-			optionsCPU->a = optionsCPU->memory[adr];
-			optionsCPU->pc += 2;
+			cs->cycles = 13;
+			uint16_t pc = cs->pc;
+			uint16_t adr  = (cs->memory[pc + 2] << 8) | cs->memory[pc + 1];
+			cs->a = cs->memory[adr];
+			cs->pc += 2;
 			break;}
 		case 0x3b:
-			optionsCPU->cycles = 5;
-			optionsCPU->sp -= 1;
+			cs->cycles = 5;
+			cs->sp -= 1;
 			break;
 		case 0x3c:
-			optionsCPU->cycles = 5;
-			ResetFlagsToZeroZSP(optionsCPU->flags);
-			optionsCPU->a += 1;
-			optionsCPU->flags->ac = (optionsCPU->a & 0x0F) == 0;
-			FlagOptimizationZSP(optionsCPU->flags, optionsCPU->a);
+			cs->cycles = 5;
+			ResetFlagsToZeroZSP(cs->flags);
+			cs->a += 1;
+			cs->flags->ac = (cs->a & 0x0F) == 0;
+			FlagOptimizationZSP(cs->flags, cs->a);
 			break;
 		case 0x3d:
-			optionsCPU->cycles = 5;
-			ResetFlagsToZeroZSP(optionsCPU->flags);
-			optionsCPU->flags->ac = (optionsCPU->a & 0x0F) == 0x00;
-			optionsCPU->a -= 1;
-			FlagOptimizationZSP(optionsCPU->flags, optionsCPU->a);
+			cs->cycles = 5;
+			ResetFlagsToZeroZSP(cs->flags);
+			cs->flags->ac = (cs->a & 0x0F) == 0x00;
+			cs->a -= 1;
+			FlagOptimizationZSP(cs->flags, cs->a);
 			break;
 		case 0x3e:
-			optionsCPU->cycles = 7;
-			optionsCPU->a = optionsCPU->memory[++optionsCPU->pc];
+			cs->cycles = 7;
+			cs->a = cs->memory[++cs->pc];
 			break;
 		case 0x3f:
-			optionsCPU->cycles = 4;
-			optionsCPU->flags->cy = !optionsCPU->flags->cy;
+			cs->cycles = 4;
+			cs->flags->cy = !cs->flags->cy;
 			break;
 		case 0x40:
-			optionsCPU->cycles = 5;
-			optionsCPU->b = optionsCPU->b;
+			cs->cycles = 5;
+			cs->b = cs->b;
 			break;
 		case 0x41:
-			optionsCPU->cycles = 5;
-			optionsCPU->b = optionsCPU->c;
+			cs->cycles = 5;
+			cs->b = cs->c;
 			break;
 		case 0x42:
-			optionsCPU->cycles = 5;
-			optionsCPU->b = optionsCPU->d;
+			cs->cycles = 5;
+			cs->b = cs->d;
 			break;
 		case 0x43:
-			optionsCPU->cycles = 5;
-			optionsCPU->b = optionsCPU->e;
+			cs->cycles = 5;
+			cs->b = cs->e;
 			break;
 		case 0x44:
-			optionsCPU->cycles = 5;
-			optionsCPU->b = optionsCPU->h;
+			cs->cycles = 5;
+			cs->b = cs->h;
 			break;
 		case 0x45:
-			optionsCPU->cycles = 5;
-			optionsCPU->b = optionsCPU->l;
+			cs->cycles = 5;
+			cs->b = cs->l;
 			break;
 		case 0x46:{
-			optionsCPU->cycles = 7;
-			uint16_t HL = (optionsCPU->h << 8) | optionsCPU->l;
-			optionsCPU->b = optionsCPU->memory[HL];
+			cs->cycles = 7;
+			uint16_t HL = (cs->h << 8) | cs->l;
+			cs->b = cs->memory[HL];
 			break;}
 		case 0x47:
-			optionsCPU->cycles = 5;
-			optionsCPU->b = optionsCPU->a;
+			cs->cycles = 5;
+			cs->b = cs->a;
 			break;
 		case 0x48:
-			optionsCPU->cycles = 5;
-			optionsCPU->c = optionsCPU->b;
+			cs->cycles = 5;
+			cs->c = cs->b;
 			break;
 		case 0x49:
-			optionsCPU->cycles = 5;
-			optionsCPU->c = optionsCPU->c;
+			cs->cycles = 5;
+			cs->c = cs->c;
 			break;
 		case 0x4a:
-			optionsCPU->cycles = 5;
-			optionsCPU->c = optionsCPU->d;
+			cs->cycles = 5;
+			cs->c = cs->d;
 			break;
 		case 0x4b:
-			optionsCPU->cycles = 5;
-			optionsCPU->c = optionsCPU->e;
+			cs->cycles = 5;
+			cs->c = cs->e;
 			break;
 		case 0x4c:
-			optionsCPU->cycles = 5;
-			optionsCPU->c = optionsCPU->h;
+			cs->cycles = 5;
+			cs->c = cs->h;
 			break;
 		case 0x4d:
-			optionsCPU->cycles = 5;
-			optionsCPU->c = optionsCPU->l;
+			cs->cycles = 5;
+			cs->c = cs->l;
 			break;
 		case 0x4e:{
-			optionsCPU->cycles = 7;
-			uint16_t HL = (optionsCPU->h << 8) | optionsCPU->l;
-			optionsCPU->c = optionsCPU->memory[HL];
+			cs->cycles = 7;
+			uint16_t HL = (cs->h << 8) | cs->l;
+			cs->c = cs->memory[HL];
 			break;}
 		case 0x4f:
-			optionsCPU->cycles = 5;
-			optionsCPU->c = optionsCPU->a;
+			cs->cycles = 5;
+			cs->c = cs->a;
 			break;
 		case 0x50:
-			optionsCPU->cycles = 5;
-			optionsCPU->d = optionsCPU->b;
+			cs->cycles = 5;
+			cs->d = cs->b;
 			break;
 		case 0x51:
-			optionsCPU->cycles = 5;
-			optionsCPU->d = optionsCPU->c;
+			cs->cycles = 5;
+			cs->d = cs->c;
 			break;
 		case 0x52:
-			optionsCPU->cycles = 5;
-			optionsCPU->d = optionsCPU->d;
+			cs->cycles = 5;
+			cs->d = cs->d;
 			break;
 		case 0x53:
-			optionsCPU->cycles = 5;
-			optionsCPU->d = optionsCPU->e;
+			cs->cycles = 5;
+			cs->d = cs->e;
 			break;
 		case 0x54:
-			optionsCPU->cycles = 5;
-			optionsCPU->d = optionsCPU->h;
+			cs->cycles = 5;
+			cs->d = cs->h;
 			break;
 		case 0x55:
-			optionsCPU->cycles = 5;
-			optionsCPU->d = optionsCPU->l;
+			cs->cycles = 5;
+			cs->d = cs->l;
 			break;
 		case 0x56:{
-			optionsCPU->cycles = 7;
-			uint16_t HL = (optionsCPU->h << 8) | optionsCPU->l;
-			optionsCPU->d = optionsCPU->memory[HL];
+			cs->cycles = 7;
+			uint16_t HL = (cs->h << 8) | cs->l;
+			cs->d = cs->memory[HL];
 			break;}
 		case 0x57:
-			optionsCPU->cycles = 5;
-			optionsCPU->d =optionsCPU->a;
+			cs->cycles = 5;
+			cs->d =cs->a;
 			break;
 		case 0x58:
-			optionsCPU->cycles = 5;
-			optionsCPU->e = optionsCPU->b;
+			cs->cycles = 5;
+			cs->e = cs->b;
 			break;
 		case 0x59:
-			optionsCPU->cycles = 5;
-			optionsCPU->e = optionsCPU->c;
+			cs->cycles = 5;
+			cs->e = cs->c;
 			break;
 		case 0x5a:
-			optionsCPU->cycles = 5;
-			optionsCPU->e = optionsCPU->d;
+			cs->cycles = 5;
+			cs->e = cs->d;
 			break;
 		case 0x5b:
-			optionsCPU->cycles = 5;
-			optionsCPU->e = optionsCPU->e;
+			cs->cycles = 5;
+			cs->e = cs->e;
 			break;
 		case 0x5c:
-			optionsCPU->cycles = 5;
-			optionsCPU->e = optionsCPU->h;
+			cs->cycles = 5;
+			cs->e = cs->h;
 			break;
 		case 0x5d:
-			optionsCPU->cycles = 5;
-			optionsCPU->e = optionsCPU->l;
+			cs->cycles = 5;
+			cs->e = cs->l;
 			break;
 		case 0x5e:{
-			optionsCPU->cycles = 7;
-			uint16_t HL = (optionsCPU->h << 8) | optionsCPU->l;
-			optionsCPU->e = optionsCPU->memory[HL];
+			cs->cycles = 7;
+			uint16_t HL = (cs->h << 8) | cs->l;
+			cs->e = cs->memory[HL];
 			break;}
 		case 0x5f:
-			optionsCPU->cycles = 5;
-			optionsCPU->e = optionsCPU->a;
+			cs->cycles = 5;
+			cs->e = cs->a;
 			break;
 		case 0x60:
-			optionsCPU->cycles = 5;
-			optionsCPU->h = optionsCPU->b;
+			cs->cycles = 5;
+			cs->h = cs->b;
 			break;
 		case 0x61:
-			optionsCPU->cycles = 5;
-			optionsCPU->h = optionsCPU->c;
+			cs->cycles = 5;
+			cs->h = cs->c;
 			break;
 		case 0x62:
-			optionsCPU->cycles = 5;
-			optionsCPU->h = optionsCPU->d;
+			cs->cycles = 5;
+			cs->h = cs->d;
 			break;
 		case 0x63:
-			optionsCPU->cycles = 5;
-			optionsCPU->h = optionsCPU->e;
+			cs->cycles = 5;
+			cs->h = cs->e;
 			break;
 		case 0x64:
-			optionsCPU->cycles = 5;
-			optionsCPU->h = optionsCPU->h;
+			cs->cycles = 5;
+			cs->h = cs->h;
 			break;
 		case 0x65:
-			optionsCPU->cycles = 5;
-			optionsCPU->h = optionsCPU->l;
+			cs->cycles = 5;
+			cs->h = cs->l;
 			break;
 		case 0x66:{
-			optionsCPU->cycles = 7;
-			uint16_t HL = (optionsCPU->h << 8) | optionsCPU->l;
-			optionsCPU->h = optionsCPU->memory[HL];
+			cs->cycles = 7;
+			uint16_t HL = (cs->h << 8) | cs->l;
+			cs->h = cs->memory[HL];
 			break;}
 		case 0x67:
-			optionsCPU->cycles = 5;
-			optionsCPU->h = optionsCPU->a;
+			cs->cycles = 5;
+			cs->h = cs->a;
 			break;
 		case 0x68:
-			optionsCPU->cycles = 5;
-			optionsCPU->l = optionsCPU->b;
+			cs->cycles = 5;
+			cs->l = cs->b;
 			break;
 		case 0x69:
-			optionsCPU->cycles = 5;
-			optionsCPU->l = optionsCPU->c;
+			cs->cycles = 5;
+			cs->l = cs->c;
 			break;
 		case 0x6a:
-			optionsCPU->cycles = 5;
-			optionsCPU->l = optionsCPU->d;
+			cs->cycles = 5;
+			cs->l = cs->d;
 			break;
 		case 0x6b:
-			optionsCPU->cycles = 5;
-			optionsCPU->l = optionsCPU->e;
+			cs->cycles = 5;
+			cs->l = cs->e;
 			break;
 		case 0x6c:
-			optionsCPU->cycles = 5;
-			optionsCPU->l = optionsCPU->h;
+			cs->cycles = 5;
+			cs->l = cs->h;
 			break;
 		case 0x6d:
-			optionsCPU->cycles = 5;
-			optionsCPU->l = optionsCPU->l;
+			cs->cycles = 5;
+			cs->l = cs->l;
 			break;
 		case 0x6e:{
-			optionsCPU->cycles = 7;
-			uint16_t HL = (optionsCPU->h << 8) | optionsCPU->l;
-			optionsCPU->l = optionsCPU->memory[HL];
+			cs->cycles = 7;
+			uint16_t HL = (cs->h << 8) | cs->l;
+			cs->l = cs->memory[HL];
 			break;}
 		case 0x6f:
-			optionsCPU->cycles = 5;
-			optionsCPU->l = optionsCPU->a;
+			cs->cycles = 5;
+			cs->l = cs->a;
 			break;
 		case 0x70:{
-			optionsCPU->cycles = 7;
-			uint16_t HL = (optionsCPU->h << 8) | optionsCPU->l;
-			optionsCPU->memory[HL] = optionsCPU->b;
+			cs->cycles = 7;
+			uint16_t HL = (cs->h << 8) | cs->l;
+			cs->memory[HL] = cs->b;
 			break;}
 		case 0x71:{
-			optionsCPU->cycles = 7;
-			uint16_t HL = (optionsCPU->h << 8) | optionsCPU->l;
-			optionsCPU->memory[HL] = optionsCPU->c;
+			cs->cycles = 7;
+			uint16_t HL = (cs->h << 8) | cs->l;
+			cs->memory[HL] = cs->c;
 			break;}
 		case 0x72:{
-			optionsCPU->cycles = 7;
-			uint16_t HL = (optionsCPU->h << 8) | optionsCPU->l;
-			optionsCPU->memory[HL] = optionsCPU->d;
+			cs->cycles = 7;
+			uint16_t HL = (cs->h << 8) | cs->l;
+			cs->memory[HL] = cs->d;
 			break;}
 		case 0x73:{
-			optionsCPU->cycles = 7;
-			uint16_t HL = (optionsCPU->h << 8) | optionsCPU->l;
-			optionsCPU->memory[HL] = optionsCPU->e;
+			cs->cycles = 7;
+			uint16_t HL = (cs->h << 8) | cs->l;
+			cs->memory[HL] = cs->e;
 			break;}
 		case 0x74:{
-			optionsCPU->cycles = 7;
-			uint16_t HL = (optionsCPU->h << 8) | optionsCPU->l;
-			optionsCPU->memory[HL] = optionsCPU->h;
+			cs->cycles = 7;
+			uint16_t HL = (cs->h << 8) | cs->l;
+			cs->memory[HL] = cs->h;
 			break;}
 		case 0x75:{
-			optionsCPU->cycles = 7;
-			uint16_t HL = (optionsCPU->h << 8) | optionsCPU->l;
-			optionsCPU->memory[HL] = optionsCPU->l;
+			cs->cycles = 7;
+			uint16_t HL = (cs->h << 8) | cs->l;
+			cs->memory[HL] = cs->l;
 			break;}
 		case 0x76:
-			optionsCPU->cycles = 7;
-			optionsCPU->hal = 1;
+			cs->cycles = 7;
+			cs->hal = 1;
 			break;
 		case 0x77:{
-			optionsCPU->cycles = 7;
-			uint16_t HL = (optionsCPU->h << 8) | optionsCPU->l;
-			optionsCPU->memory[HL] = optionsCPU->a;
+			cs->cycles = 7;
+			uint16_t HL = (cs->h << 8) | cs->l;
+			cs->memory[HL] = cs->a;
 			break;}
 		case 0x78:
-			optionsCPU->cycles = 5;
-			optionsCPU->a = optionsCPU->b;
+			cs->cycles = 5;
+			cs->a = cs->b;
 			break;
 		case 0x79:
-			optionsCPU->cycles = 5;
-			optionsCPU->a = optionsCPU->c;
+			cs->cycles = 5;
+			cs->a = cs->c;
 			break;
 		case 0x7a:
-			optionsCPU->cycles = 5;
-			optionsCPU->a = optionsCPU->d;
+			cs->cycles = 5;
+			cs->a = cs->d;
 			break;
 		case 0x7b:
-			optionsCPU->cycles = 5;
-			optionsCPU->a = optionsCPU->e;
+			cs->cycles = 5;
+			cs->a = cs->e;
 			break;
 		case 0x7c:
-			optionsCPU->cycles = 5;
-			optionsCPU->a = optionsCPU->h;
+			cs->cycles = 5;
+			cs->a = cs->h;
 			break;
 		case 0x7d:
-			optionsCPU->cycles = 5;
-			optionsCPU->a = optionsCPU->l;
+			cs->cycles = 5;
+			cs->a = cs->l;
 			break;
 		case 0x7e:{
-			optionsCPU->cycles = 7;
-			uint16_t HL = (optionsCPU->h << 8) | optionsCPU->l;
-			optionsCPU->a = optionsCPU->memory[HL];
+			cs->cycles = 7;
+			uint16_t HL = (cs->h << 8) | cs->l;
+			cs->a = cs->memory[HL];
 			break;}
 		case 0x7f:
-			optionsCPU->cycles = 5;
-			optionsCPU->a = optionsCPU->a;
+			cs->cycles = 5;
+			cs->a = cs->a;
 			break;
 		case 0x80:{
-			optionsCPU->cycles = 4;
-			ResetFlagsToZeroZSP(optionsCPU->flags);
-			uint16_t res = optionsCPU->a + optionsCPU->b;
-			optionsCPU->flags->ac = ((optionsCPU->a & 0x0F) + (optionsCPU->b & 0x0F)) > 0x0F;
-			optionsCPU->flags->cy = res > 0xFF;
-			optionsCPU->a  = res;
-			FlagOptimizationZSP(optionsCPU->flags, optionsCPU->a);
+			cs->cycles = 4;
+			ResetFlagsToZeroZSP(cs->flags);
+			uint16_t res = cs->a + cs->b;
+			cs->flags->ac = ((cs->a & 0x0F) + (cs->b & 0x0F)) > 0x0F;
+			cs->flags->cy = res > 0xFF;
+			cs->a  = res;
+			FlagOptimizationZSP(cs->flags, cs->a);
 			break;}
 		case 0x81:{
-			optionsCPU->cycles = 4;
-			ResetFlagsToZeroZSP(optionsCPU->flags);
-			uint16_t res = optionsCPU->a + optionsCPU->c;
-			optionsCPU->flags->ac = ((optionsCPU->a & 0x0F) + (optionsCPU->c & 0x0F)) > 0x0F;
-			optionsCPU->flags->cy = res > 0xFF;
-			optionsCPU->a  = res;
-			FlagOptimizationZSP(optionsCPU->flags, optionsCPU->a);
+			cs->cycles = 4;
+			ResetFlagsToZeroZSP(cs->flags);
+			uint16_t res = cs->a + cs->c;
+			cs->flags->ac = ((cs->a & 0x0F) + (cs->c & 0x0F)) > 0x0F;
+			cs->flags->cy = res > 0xFF;
+			cs->a  = res;
+			FlagOptimizationZSP(cs->flags, cs->a);
 			break;}
 		case 0x82:{
-			optionsCPU->cycles = 4;
-			ResetFlagsToZeroZSP(optionsCPU->flags);
-			uint16_t res = optionsCPU->a + optionsCPU->d;
-			optionsCPU->flags->ac = ((optionsCPU->a & 0x0F) + (optionsCPU->d & 0x0F)) > 0x0F;
-			optionsCPU->flags->cy = res > 0xFF;
-			optionsCPU->a  = res;
-			FlagOptimizationZSP(optionsCPU->flags, optionsCPU->a);
+			cs->cycles = 4;
+			ResetFlagsToZeroZSP(cs->flags);
+			uint16_t res = cs->a + cs->d;
+			cs->flags->ac = ((cs->a & 0x0F) + (cs->d & 0x0F)) > 0x0F;
+			cs->flags->cy = res > 0xFF;
+			cs->a  = res;
+			FlagOptimizationZSP(cs->flags, cs->a);
 			break;}
 		case 0x83:{
-			optionsCPU->cycles = 4;
-			ResetFlagsToZeroZSP(optionsCPU->flags);
-			uint16_t res = optionsCPU->a + optionsCPU->e;
-			optionsCPU->flags->ac = ((optionsCPU->a & 0x0F) + (optionsCPU->e & 0x0F)) > 0x0F;
-			optionsCPU->flags->cy = res > 0xFF;
-			optionsCPU->a  = res;
-			FlagOptimizationZSP(optionsCPU->flags, optionsCPU->a);
+			cs->cycles = 4;
+			ResetFlagsToZeroZSP(cs->flags);
+			uint16_t res = cs->a + cs->e;
+			cs->flags->ac = ((cs->a & 0x0F) + (cs->e & 0x0F)) > 0x0F;
+			cs->flags->cy = res > 0xFF;
+			cs->a  = res;
+			FlagOptimizationZSP(cs->flags, cs->a);
 			break;}
 		case 0x84:{
-			optionsCPU->cycles = 4;
-			ResetFlagsToZeroZSP(optionsCPU->flags);
-			uint16_t res = optionsCPU->a + optionsCPU->h;
-			optionsCPU->flags->ac = ((optionsCPU->a & 0x0F) + (optionsCPU->h & 0x0F)) > 0x0F;
-			optionsCPU->flags->cy = res > 0xFF;
-			optionsCPU->a  = res;
-			FlagOptimizationZSP(optionsCPU->flags, optionsCPU->a);
+			cs->cycles = 4;
+			ResetFlagsToZeroZSP(cs->flags);
+			uint16_t res = cs->a + cs->h;
+			cs->flags->ac = ((cs->a & 0x0F) + (cs->h & 0x0F)) > 0x0F;
+			cs->flags->cy = res > 0xFF;
+			cs->a  = res;
+			FlagOptimizationZSP(cs->flags, cs->a);
 			break;}
 		case 0x85:{
-			optionsCPU->cycles = 4;
-			ResetFlagsToZeroZSP(optionsCPU->flags);
-			uint16_t res = optionsCPU->a + optionsCPU->l;
-			optionsCPU->flags->ac = ((optionsCPU->a & 0x0F) + (optionsCPU->l & 0x0F)) > 0x0F;
-			optionsCPU->flags->cy = res > 0xFF;
-			optionsCPU->a  = res;
-			FlagOptimizationZSP(optionsCPU->flags, optionsCPU->a);
+			cs->cycles = 4;
+			ResetFlagsToZeroZSP(cs->flags);
+			uint16_t res = cs->a + cs->l;
+			cs->flags->ac = ((cs->a & 0x0F) + (cs->l & 0x0F)) > 0x0F;
+			cs->flags->cy = res > 0xFF;
+			cs->a  = res;
+			FlagOptimizationZSP(cs->flags, cs->a);
 			break;}
 		case 0x86:{
-			optionsCPU->cycles = 7;
-			ResetFlagsToZeroZSP(optionsCPU->flags);
-			uint16_t HL = (optionsCPU->h << 8) | optionsCPU->l;
-			uint16_t res = optionsCPU->a + optionsCPU->memory[HL];
-			optionsCPU->flags->ac = ((optionsCPU->a & 0x0F) + (optionsCPU->memory[HL] & 0x0F)) > 0x0F;
-			optionsCPU->flags->cy = res > 0xFF;
-			optionsCPU->a  = res;
-			FlagOptimizationZSP(optionsCPU->flags, optionsCPU->a);
+			cs->cycles = 7;
+			ResetFlagsToZeroZSP(cs->flags);
+			uint16_t HL = (cs->h << 8) | cs->l;
+			uint16_t res = cs->a + cs->memory[HL];
+			cs->flags->ac = ((cs->a & 0x0F) + (cs->memory[HL] & 0x0F)) > 0x0F;
+			cs->flags->cy = res > 0xFF;
+			cs->a  = res;
+			FlagOptimizationZSP(cs->flags, cs->a);
 			break;}
 		case 0x87:{
-			optionsCPU->cycles = 4;
-			ResetFlagsToZeroZSP(optionsCPU->flags);
-			uint16_t res = optionsCPU->a + optionsCPU->a;
-			optionsCPU->flags->ac = ((optionsCPU->a & 0x0F) + (optionsCPU->a & 0x0F)) > 0x0F;
-			optionsCPU->flags->cy = res > 0xFF;
-			optionsCPU->a  = res;
-			FlagOptimizationZSP(optionsCPU->flags, optionsCPU->a);
+			cs->cycles = 4;
+			ResetFlagsToZeroZSP(cs->flags);
+			uint16_t res = cs->a + cs->a;
+			cs->flags->ac = ((cs->a & 0x0F) + (cs->a & 0x0F)) > 0x0F;
+			cs->flags->cy = res > 0xFF;
+			cs->a  = res;
+			FlagOptimizationZSP(cs->flags, cs->a);
 			break;}
 		case 0x88:{
-			optionsCPU->cycles = 4;
-			uint8_t cy = optionsCPU->flags->cy;
-			ResetFlagsToZeroZSP(optionsCPU->flags);
-			optionsCPU->flags->ac = ((optionsCPU->a & 0x0F) + (optionsCPU->b & 0x0F) + cy) > 0x0F;
-			uint16_t res = optionsCPU->a + optionsCPU->b + cy;
-			optionsCPU->flags->cy = res > 0xFF;
-			optionsCPU->a  = res;
-			FlagOptimizationZSP(optionsCPU->flags, optionsCPU->a);
+			cs->cycles = 4;
+			uint8_t cy = cs->flags->cy;
+			ResetFlagsToZeroZSP(cs->flags);
+			cs->flags->ac = ((cs->a & 0x0F) + (cs->b & 0x0F) + cy) > 0x0F;
+			uint16_t res = cs->a + cs->b + cy;
+			cs->flags->cy = res > 0xFF;
+			cs->a  = res;
+			FlagOptimizationZSP(cs->flags, cs->a);
 			break;}
 		case 0x89:{
-			optionsCPU->cycles = 4;
-			uint8_t cy = optionsCPU->flags->cy;
-			ResetFlagsToZeroZSP(optionsCPU->flags);
-			optionsCPU->flags->ac = ((optionsCPU->a & 0x0F) + (optionsCPU->c & 0x0F) + cy) > 0x0F;
-			uint16_t res = optionsCPU->a + optionsCPU->c + cy;
-			optionsCPU->flags->cy = res > 0xFF;
-			optionsCPU->a  = res;
-			FlagOptimizationZSP(optionsCPU->flags, optionsCPU->a);
+			cs->cycles = 4;
+			uint8_t cy = cs->flags->cy;
+			ResetFlagsToZeroZSP(cs->flags);
+			cs->flags->ac = ((cs->a & 0x0F) + (cs->c & 0x0F) + cy) > 0x0F;
+			uint16_t res = cs->a + cs->c + cy;
+			cs->flags->cy = res > 0xFF;
+			cs->a  = res;
+			FlagOptimizationZSP(cs->flags, cs->a);
 			break;}
 		case 0x8a:{
-			optionsCPU->cycles = 4;
-			uint8_t cy = optionsCPU->flags->cy;
-			ResetFlagsToZeroZSP(optionsCPU->flags);
-			optionsCPU->flags->ac = ((optionsCPU->a & 0x0F) + (optionsCPU->d & 0x0F) + cy) > 0x0F;
-			uint16_t res = optionsCPU->a + optionsCPU->d + cy;
-			optionsCPU->flags->cy = res > 0xFF;
-			optionsCPU->a  = res;
-			FlagOptimizationZSP(optionsCPU->flags, optionsCPU->a);
+			cs->cycles = 4;
+			uint8_t cy = cs->flags->cy;
+			ResetFlagsToZeroZSP(cs->flags);
+			cs->flags->ac = ((cs->a & 0x0F) + (cs->d & 0x0F) + cy) > 0x0F;
+			uint16_t res = cs->a + cs->d + cy;
+			cs->flags->cy = res > 0xFF;
+			cs->a  = res;
+			FlagOptimizationZSP(cs->flags, cs->a);
 			break;}
 		case 0x8b:{
-			optionsCPU->cycles = 4;
-			uint8_t cy = optionsCPU->flags->cy;
-			ResetFlagsToZeroZSP(optionsCPU->flags);
-			optionsCPU->flags->ac = ((optionsCPU->a & 0x0F) + (optionsCPU->e & 0x0F) + cy) > 0x0F;
-			uint16_t res = optionsCPU->a + optionsCPU->e + cy;
-			optionsCPU->flags->cy = res > 0xFF;
-			optionsCPU->a  = res;
-			FlagOptimizationZSP(optionsCPU->flags, optionsCPU->a);
+			cs->cycles = 4;
+			uint8_t cy = cs->flags->cy;
+			ResetFlagsToZeroZSP(cs->flags);
+			cs->flags->ac = ((cs->a & 0x0F) + (cs->e & 0x0F) + cy) > 0x0F;
+			uint16_t res = cs->a + cs->e + cy;
+			cs->flags->cy = res > 0xFF;
+			cs->a  = res;
+			FlagOptimizationZSP(cs->flags, cs->a);
 			break;}
 		case 0x8c:{
-			optionsCPU->cycles = 4;
-			uint8_t cy = optionsCPU->flags->cy;
-			ResetFlagsToZeroZSP(optionsCPU->flags);
-			optionsCPU->flags->ac = ((optionsCPU->a & 0x0F) + (optionsCPU->h & 0x0F) + cy) > 0x0F;
-			uint16_t res = optionsCPU->a + optionsCPU->h + cy;
-			optionsCPU->flags->cy = res > 0xFF;
-			optionsCPU->a  = res;
-			FlagOptimizationZSP(optionsCPU->flags, optionsCPU->a);
+			cs->cycles = 4;
+			uint8_t cy = cs->flags->cy;
+			ResetFlagsToZeroZSP(cs->flags);
+			cs->flags->ac = ((cs->a & 0x0F) + (cs->h & 0x0F) + cy) > 0x0F;
+			uint16_t res = cs->a + cs->h + cy;
+			cs->flags->cy = res > 0xFF;
+			cs->a  = res;
+			FlagOptimizationZSP(cs->flags, cs->a);
 			break;}
 		case 0x8d:{
-			optionsCPU->cycles = 4;
-			uint8_t cy = optionsCPU->flags->cy;
-			ResetFlagsToZeroZSP(optionsCPU->flags);
-			optionsCPU->flags->ac = ((optionsCPU->a & 0x0F) + (optionsCPU->l & 0x0F) + cy) > 0x0F;
-			uint16_t res = optionsCPU->a + optionsCPU->l + cy;
-			optionsCPU->flags->cy = res > 0xFF;
-			optionsCPU->a  = res;
-			FlagOptimizationZSP(optionsCPU->flags, optionsCPU->a);
+			cs->cycles = 4;
+			uint8_t cy = cs->flags->cy;
+			ResetFlagsToZeroZSP(cs->flags);
+			cs->flags->ac = ((cs->a & 0x0F) + (cs->l & 0x0F) + cy) > 0x0F;
+			uint16_t res = cs->a + cs->l + cy;
+			cs->flags->cy = res > 0xFF;
+			cs->a  = res;
+			FlagOptimizationZSP(cs->flags, cs->a);
 			break;}
 		case 0x8e:{
-			optionsCPU->cycles = 7;
-			uint8_t cy = optionsCPU->flags->cy;
-			ResetFlagsToZeroZSP(optionsCPU->flags);
-			uint16_t HL = (optionsCPU->h << 8) | optionsCPU->l;
-			uint16_t res = optionsCPU->a + optionsCPU->memory[HL] + cy;
-			optionsCPU->flags->cy = res > 0xFF;
-			optionsCPU->flags->ac = ((optionsCPU->a & 0x0F) + (optionsCPU->memory[HL] & 0x0F) + cy) > 0x0F;
-			optionsCPU->a  = res;
-			FlagOptimizationZSP(optionsCPU->flags, optionsCPU->a);
+			cs->cycles = 7;
+			uint8_t cy = cs->flags->cy;
+			ResetFlagsToZeroZSP(cs->flags);
+			uint16_t HL = (cs->h << 8) | cs->l;
+			uint16_t res = cs->a + cs->memory[HL] + cy;
+			cs->flags->cy = res > 0xFF;
+			cs->flags->ac = ((cs->a & 0x0F) + (cs->memory[HL] & 0x0F) + cy) > 0x0F;
+			cs->a  = res;
+			FlagOptimizationZSP(cs->flags, cs->a);
 			break;}
 		case 0x8f:{
-			optionsCPU->cycles = 4;
-			uint8_t cy = optionsCPU->flags->cy;
-			ResetFlagsToZeroZSP(optionsCPU->flags);
-			optionsCPU->flags->ac = ((optionsCPU->a & 0x0F) + (optionsCPU->a & 0x0F) + cy) > 0x0F;
-			uint16_t res = optionsCPU->a + optionsCPU->a + cy;
-			optionsCPU->flags->cy = res > 0xFF;
-			optionsCPU->a  = res;
-			FlagOptimizationZSP(optionsCPU->flags, optionsCPU->a);
+			cs->cycles = 4;
+			uint8_t cy = cs->flags->cy;
+			ResetFlagsToZeroZSP(cs->flags);
+			cs->flags->ac = ((cs->a & 0x0F) + (cs->a & 0x0F) + cy) > 0x0F;
+			uint16_t res = cs->a + cs->a + cy;
+			cs->flags->cy = res > 0xFF;
+			cs->a  = res;
+			FlagOptimizationZSP(cs->flags, cs->a);
 			break;}
 		case 0x90:{
-			optionsCPU->cycles = 4;
-			ResetFlagsToZeroZSP(optionsCPU->flags);
-			uint16_t res = optionsCPU->a - optionsCPU->b;
+			cs->cycles = 4;
+			ResetFlagsToZeroZSP(cs->flags);
+			uint16_t res = cs->a - cs->b;
 			uint8_t res8 =res & 0xFF;
-			optionsCPU->flags->ac = ((optionsCPU->a ^ optionsCPU->b ^ res8) & 0x10) != 0;
-			optionsCPU->flags->cy = res > 0xFF;
-			optionsCPU->a  = res8;
-			FlagOptimizationZSP(optionsCPU->flags, optionsCPU->a);
+			cs->flags->ac = ((cs->a ^ cs->b ^ res8) & 0x10) != 0;
+			cs->flags->cy = res > 0xFF;
+			cs->a  = res8;
+			FlagOptimizationZSP(cs->flags, cs->a);
 			break;}
 		case 0x91:{
-			optionsCPU->cycles = 4;
-			ResetFlagsToZeroZSP(optionsCPU->flags);
-			uint16_t res = optionsCPU->a - optionsCPU->c;
+			cs->cycles = 4;
+			ResetFlagsToZeroZSP(cs->flags);
+			uint16_t res = cs->a - cs->c;
 			uint8_t res8 =res & 0xFF;
-			optionsCPU->flags->ac = ((optionsCPU->a ^ optionsCPU->c ^ res8) & 0x10) != 0;
-			optionsCPU->flags->cy = res > 0xFF;
-			optionsCPU->a  = res;
-			FlagOptimizationZSP(optionsCPU->flags, optionsCPU->a);
+			cs->flags->ac = ((cs->a ^ cs->c ^ res8) & 0x10) != 0;
+			cs->flags->cy = res > 0xFF;
+			cs->a  = res;
+			FlagOptimizationZSP(cs->flags, cs->a);
 			break;}
 		case 0x92:{
-			optionsCPU->cycles = 4;
-			ResetFlagsToZeroZSP(optionsCPU->flags);
-			uint16_t res = optionsCPU->a - optionsCPU->d;
+			cs->cycles = 4;
+			ResetFlagsToZeroZSP(cs->flags);
+			uint16_t res = cs->a - cs->d;
 			uint8_t res8 =res & 0xFF;
-			optionsCPU->flags->ac = ((optionsCPU->a ^ optionsCPU->d ^ res8) & 0x10) != 0;
-			optionsCPU->flags->cy = res > 0xFF;
-			optionsCPU->a  = res;
-			FlagOptimizationZSP(optionsCPU->flags, optionsCPU->a);
+			cs->flags->ac = ((cs->a ^ cs->d ^ res8) & 0x10) != 0;
+			cs->flags->cy = res > 0xFF;
+			cs->a  = res;
+			FlagOptimizationZSP(cs->flags, cs->a);
 			break;}
 		case 0x93:{
-			optionsCPU->cycles = 4;
-			ResetFlagsToZeroZSP(optionsCPU->flags);
-			uint16_t res = optionsCPU->a - optionsCPU->e;
+			cs->cycles = 4;
+			ResetFlagsToZeroZSP(cs->flags);
+			uint16_t res = cs->a - cs->e;
 			uint8_t res8 =res & 0xFF;
-			optionsCPU->flags->ac = ((optionsCPU->a ^ optionsCPU->e ^ res8) & 0x10) != 0;
-			optionsCPU->flags->cy = res > 0xFF;
-			optionsCPU->a  = res;
-			FlagOptimizationZSP(optionsCPU->flags, optionsCPU->a);
+			cs->flags->ac = ((cs->a ^ cs->e ^ res8) & 0x10) != 0;
+			cs->flags->cy = res > 0xFF;
+			cs->a  = res;
+			FlagOptimizationZSP(cs->flags, cs->a);
 			break;}
 		case 0x94:{
-			optionsCPU->cycles = 4;
-			ResetFlagsToZeroZSP(optionsCPU->flags);
-			uint16_t res = optionsCPU->a - optionsCPU->h;
+			cs->cycles = 4;
+			ResetFlagsToZeroZSP(cs->flags);
+			uint16_t res = cs->a - cs->h;
 			uint8_t res8 =res & 0xFF;
-			optionsCPU->flags->ac = ((optionsCPU->a ^ optionsCPU->h ^ res8) & 0x10) != 0;
-			optionsCPU->flags->cy = res > 0xFF;
-			optionsCPU->a  = res;
-			FlagOptimizationZSP(optionsCPU->flags, optionsCPU->a);
+			cs->flags->ac = ((cs->a ^ cs->h ^ res8) & 0x10) != 0;
+			cs->flags->cy = res > 0xFF;
+			cs->a  = res;
+			FlagOptimizationZSP(cs->flags, cs->a);
 			break;}
 		case 0x95:{
-			optionsCPU->cycles = 4;
-			ResetFlagsToZeroZSP(optionsCPU->flags);
-			uint16_t res = optionsCPU->a - optionsCPU->l;
+			cs->cycles = 4;
+			ResetFlagsToZeroZSP(cs->flags);
+			uint16_t res = cs->a - cs->l;
 			uint8_t res8 =res & 0xFF;
-			optionsCPU->flags->ac = ((optionsCPU->a ^ optionsCPU->l ^ res8) & 0x10) != 0;
-			optionsCPU->flags->cy = res > 0xFF;
-			optionsCPU->a  = res;
-			FlagOptimizationZSP(optionsCPU->flags, optionsCPU->a);
+			cs->flags->ac = ((cs->a ^ cs->l ^ res8) & 0x10) != 0;
+			cs->flags->cy = res > 0xFF;
+			cs->a  = res;
+			FlagOptimizationZSP(cs->flags, cs->a);
 			break;}
 		case 0x96:{
-			optionsCPU->cycles = 7;
-			ResetFlagsToZeroZSP(optionsCPU->flags);
-			uint16_t HL = (optionsCPU->h << 8) | optionsCPU->l;
-			uint16_t res = optionsCPU->a - optionsCPU->memory[HL];
+			cs->cycles = 7;
+			ResetFlagsToZeroZSP(cs->flags);
+			uint16_t HL = (cs->h << 8) | cs->l;
+			uint16_t res = cs->a - cs->memory[HL];
 			uint8_t res8 =res & 0xFF;
-			optionsCPU->flags->ac = ((optionsCPU->a ^ optionsCPU->memory[HL] ^ res8) & 0x10) != 0;
-			optionsCPU->flags->cy = res > 0xFF;
-			optionsCPU->a  = res;
-			FlagOptimizationZSP(optionsCPU->flags, optionsCPU->a);
+			cs->flags->ac = ((cs->a ^ cs->memory[HL] ^ res8) & 0x10) != 0;
+			cs->flags->cy = res > 0xFF;
+			cs->a  = res;
+			FlagOptimizationZSP(cs->flags, cs->a);
 			break;}
 		case 0x97:{
-			optionsCPU->cycles = 4;
-			ResetFlagsToZeroZSP(optionsCPU->flags);
-			uint16_t res = optionsCPU->a - optionsCPU->a;
+			cs->cycles = 4;
+			ResetFlagsToZeroZSP(cs->flags);
+			uint16_t res = cs->a - cs->a;
 			uint8_t res8 =res & 0xFF;
-			optionsCPU->flags->ac = ((optionsCPU->a ^ optionsCPU->a ^ res8) & 0x10) != 0;
-			optionsCPU->flags->cy = res > 0xFF;
-			optionsCPU->a  = res;
-			FlagOptimizationZSP(optionsCPU->flags, optionsCPU->a);
+			cs->flags->ac = ((cs->a ^ cs->a ^ res8) & 0x10) != 0;
+			cs->flags->cy = res > 0xFF;
+			cs->a  = res;
+			FlagOptimizationZSP(cs->flags, cs->a);
 			break;}
 		case 0x98:{
-			optionsCPU->cycles = 4;
-			uint8_t cy = optionsCPU->flags->cy;
-			ResetFlagsToZeroZSP(optionsCPU->flags);
-			uint16_t res = optionsCPU->a - optionsCPU->b - cy;
+			cs->cycles = 4;
+			uint8_t cy = cs->flags->cy;
+			ResetFlagsToZeroZSP(cs->flags);
+			uint16_t res = cs->a - cs->b - cy;
 			uint8_t res8 = res & 0xFF;
-			optionsCPU->flags->ac = ((optionsCPU->a ^ optionsCPU->b ^ cy ^ res8) & 0x10) != 0;
-			optionsCPU->flags->cy = res > 0xFF;
-			optionsCPU->a  = res;
-			FlagOptimizationZSP(optionsCPU->flags, optionsCPU->a);
+			cs->flags->ac = ((cs->a ^ cs->b ^ cy ^ res8) & 0x10) != 0;
+			cs->flags->cy = res > 0xFF;
+			cs->a  = res;
+			FlagOptimizationZSP(cs->flags, cs->a);
 			break;}
 		case 0x99:{
-			optionsCPU->cycles = 4;
-			uint8_t cy = optionsCPU->flags->cy;
-			ResetFlagsToZeroZSP(optionsCPU->flags);
-			uint16_t res = optionsCPU->a - optionsCPU->c - cy;
+			cs->cycles = 4;
+			uint8_t cy = cs->flags->cy;
+			ResetFlagsToZeroZSP(cs->flags);
+			uint16_t res = cs->a - cs->c - cy;
 			uint8_t res8 = res & 0xFF;
-			optionsCPU->flags->ac = ((optionsCPU->a ^ optionsCPU->c ^ cy ^ res8) & 0x10) != 0;
-			optionsCPU->flags->cy = res > 0xFF;
-			optionsCPU->a  = res;
-			FlagOptimizationZSP(optionsCPU->flags, optionsCPU->a);
+			cs->flags->ac = ((cs->a ^ cs->c ^ cy ^ res8) & 0x10) != 0;
+			cs->flags->cy = res > 0xFF;
+			cs->a  = res;
+			FlagOptimizationZSP(cs->flags, cs->a);
 			break;}
 		case 0x9a:{
-			optionsCPU->cycles = 4;
-			uint8_t cy = optionsCPU->flags->cy;
-			ResetFlagsToZeroZSP(optionsCPU->flags);
-			uint16_t res = optionsCPU->a - optionsCPU->d - cy;
+			cs->cycles = 4;
+			uint8_t cy = cs->flags->cy;
+			ResetFlagsToZeroZSP(cs->flags);
+			uint16_t res = cs->a - cs->d - cy;
 			uint8_t res8 = res & 0xFF;
-			optionsCPU->flags->ac = ((optionsCPU->a ^ optionsCPU->d ^ cy ^ res8) & 0x10) != 0;
-			optionsCPU->flags->cy = res > 0xFF;
-			optionsCPU->a = res;
-			FlagOptimizationZSP(optionsCPU->flags, optionsCPU->a);
+			cs->flags->ac = ((cs->a ^ cs->d ^ cy ^ res8) & 0x10) != 0;
+			cs->flags->cy = res > 0xFF;
+			cs->a = res;
+			FlagOptimizationZSP(cs->flags, cs->a);
 			break;}
 		case 0x9b:{
-			optionsCPU->cycles = 4;
-			uint8_t cy = optionsCPU->flags->cy;
-			ResetFlagsToZeroZSP(optionsCPU->flags);
-			uint16_t res = optionsCPU->a - optionsCPU->e - cy;
+			cs->cycles = 4;
+			uint8_t cy = cs->flags->cy;
+			ResetFlagsToZeroZSP(cs->flags);
+			uint16_t res = cs->a - cs->e - cy;
 			uint8_t res8 = res & 0xFF;
-			optionsCPU->flags->ac = ((optionsCPU->a ^ optionsCPU->e ^ cy ^ res8) & 0x10) != 0;
-			optionsCPU->flags->cy = res > 0xFF;
-			optionsCPU->a  = res;
-			FlagOptimizationZSP(optionsCPU->flags, optionsCPU->a);
+			cs->flags->ac = ((cs->a ^ cs->e ^ cy ^ res8) & 0x10) != 0;
+			cs->flags->cy = res > 0xFF;
+			cs->a  = res;
+			FlagOptimizationZSP(cs->flags, cs->a);
 			break;}
 		case 0x9c:{
-			optionsCPU->cycles = 4;
-			uint8_t cy = optionsCPU->flags->cy;
-			ResetFlagsToZeroZSP(optionsCPU->flags);
-			uint16_t res = optionsCPU->a - optionsCPU->h - cy;
+			cs->cycles = 4;
+			uint8_t cy = cs->flags->cy;
+			ResetFlagsToZeroZSP(cs->flags);
+			uint16_t res = cs->a - cs->h - cy;
 			uint8_t res8 = res & 0xFF;
-			optionsCPU->flags->ac = ((optionsCPU->a ^ optionsCPU->h ^ cy ^ res8) & 0x10) != 0;
-			optionsCPU->flags->cy = res > 0xFF;
-			optionsCPU->a  = res;
-			FlagOptimizationZSP(optionsCPU->flags, optionsCPU->a);
+			cs->flags->ac = ((cs->a ^ cs->h ^ cy ^ res8) & 0x10) != 0;
+			cs->flags->cy = res > 0xFF;
+			cs->a  = res;
+			FlagOptimizationZSP(cs->flags, cs->a);
 			break;}
 		case 0x9d:{
-			optionsCPU->cycles = 4;
-			uint8_t cy = optionsCPU->flags->cy;
-			ResetFlagsToZeroZSP(optionsCPU->flags);
-			uint16_t res = optionsCPU->a - optionsCPU->l - cy;
+			cs->cycles = 4;
+			uint8_t cy = cs->flags->cy;
+			ResetFlagsToZeroZSP(cs->flags);
+			uint16_t res = cs->a - cs->l - cy;
 			uint8_t res8 = res & 0xFF;
-			optionsCPU->flags->ac = ((optionsCPU->a ^ optionsCPU->l ^ cy ^ res8) & 0x10) != 0;
-			optionsCPU->flags->cy = res > 0xFF;
-			optionsCPU->a  = res;
-			FlagOptimizationZSP(optionsCPU->flags, optionsCPU->a);
+			cs->flags->ac = ((cs->a ^ cs->l ^ cy ^ res8) & 0x10) != 0;
+			cs->flags->cy = res > 0xFF;
+			cs->a  = res;
+			FlagOptimizationZSP(cs->flags, cs->a);
 			break;}
 		case 0x9e:{
-			optionsCPU->cycles = 7;
-			uint8_t cy = optionsCPU->flags->cy;
-			ResetFlagsToZeroZSP(optionsCPU->flags);
-			uint16_t HL = (optionsCPU->h << 8) | optionsCPU->l;
-			uint16_t res = optionsCPU->a - optionsCPU->memory[HL] - cy;
+			cs->cycles = 7;
+			uint8_t cy = cs->flags->cy;
+			ResetFlagsToZeroZSP(cs->flags);
+			uint16_t HL = (cs->h << 8) | cs->l;
+			uint16_t res = cs->a - cs->memory[HL] - cy;
 			uint8_t res8 = res & 0xFF;
-			optionsCPU->flags->ac = ((optionsCPU->a ^ optionsCPU->memory[HL] ^ cy ^ res8) & 0x10) != 0;
-			optionsCPU->flags->cy = res > 0xFF;
-			optionsCPU->a  = res;
-			FlagOptimizationZSP(optionsCPU->flags, optionsCPU->a);
+			cs->flags->ac = ((cs->a ^ cs->memory[HL] ^ cy ^ res8) & 0x10) != 0;
+			cs->flags->cy = res > 0xFF;
+			cs->a  = res;
+			FlagOptimizationZSP(cs->flags, cs->a);
 			break;}
 		case 0x9f:{
-			optionsCPU->cycles = 4;
-			uint8_t cy = optionsCPU->flags->cy;
-			ResetFlagsToZeroZSP(optionsCPU->flags);
-			uint16_t res = optionsCPU->a - optionsCPU->a - cy;
+			cs->cycles = 4;
+			uint8_t cy = cs->flags->cy;
+			ResetFlagsToZeroZSP(cs->flags);
+			uint16_t res = cs->a - cs->a - cy;
 			uint8_t res8 = res & 0xFF;
-			optionsCPU->flags->ac = ((optionsCPU->a ^ optionsCPU->a ^ cy ^ res8) & 0x10) != 0;
-			optionsCPU->flags->cy = res > 0xFF;
-			optionsCPU->a  = res;
-			FlagOptimizationZSP(optionsCPU->flags, optionsCPU->a);
+			cs->flags->ac = ((cs->a ^ cs->a ^ cy ^ res8) & 0x10) != 0;
+			cs->flags->cy = res > 0xFF;
+			cs->a  = res;
+			FlagOptimizationZSP(cs->flags, cs->a);
 			break;}
 		case 0xa0:
-			optionsCPU->cycles = 4;
-			ResetFlagsToZeroZSP(optionsCPU->flags);
-			optionsCPU->a &= optionsCPU->b;
-			FlagOptimizationZSP(optionsCPU->flags, optionsCPU->a);
-			optionsCPU->flags->ac = ((optionsCPU->a | optionsCPU->b) & 0x08) != 0;
-			optionsCPU->flags->cy = 0;
+			cs->cycles = 4;
+			ResetFlagsToZeroZSP(cs->flags);
+			cs->a &= cs->b;
+			FlagOptimizationZSP(cs->flags, cs->a);
+			cs->flags->ac = ((cs->a | cs->b) & 0x08) != 0;
+			cs->flags->cy = 0;
 			break;
 		case 0xa1:
-			optionsCPU->cycles = 4;
-			ResetFlagsToZeroZSP(optionsCPU->flags);
-			optionsCPU->a &= optionsCPU->c;
-			FlagOptimizationZSP(optionsCPU->flags, optionsCPU->a);
-			optionsCPU->flags->ac = ((optionsCPU->a | optionsCPU->c) & 0x08) != 0;
-			optionsCPU->flags->cy = 0;
+			cs->cycles = 4;
+			ResetFlagsToZeroZSP(cs->flags);
+			cs->a &= cs->c;
+			FlagOptimizationZSP(cs->flags, cs->a);
+			cs->flags->ac = ((cs->a | cs->c) & 0x08) != 0;
+			cs->flags->cy = 0;
 			break;
 		case 0xa2:
-			optionsCPU->cycles = 4;
-			ResetFlagsToZeroZSP(optionsCPU->flags);
-			optionsCPU->a &= optionsCPU->d;
-			FlagOptimizationZSP(optionsCPU->flags, optionsCPU->a);
-			optionsCPU->flags->ac = ((optionsCPU->a | optionsCPU->d) & 0x08) != 0;
-			optionsCPU->flags->cy = 0;
+			cs->cycles = 4;
+			ResetFlagsToZeroZSP(cs->flags);
+			cs->a &= cs->d;
+			FlagOptimizationZSP(cs->flags, cs->a);
+			cs->flags->ac = ((cs->a | cs->d) & 0x08) != 0;
+			cs->flags->cy = 0;
 			break;
 		case 0xa3:
-			optionsCPU->cycles = 4;
-			ResetFlagsToZeroZSP(optionsCPU->flags);
-			optionsCPU->a &= optionsCPU->e;
-			FlagOptimizationZSP(optionsCPU->flags, optionsCPU->a);
-			optionsCPU->flags->ac = ((optionsCPU->a | optionsCPU->e) & 0x08) != 0;
-			optionsCPU->flags->cy = 0;
+			cs->cycles = 4;
+			ResetFlagsToZeroZSP(cs->flags);
+			cs->a &= cs->e;
+			FlagOptimizationZSP(cs->flags, cs->a);
+			cs->flags->ac = ((cs->a | cs->e) & 0x08) != 0;
+			cs->flags->cy = 0;
 			break;
 		case 0xa4:
-			optionsCPU->cycles = 4;
-			ResetFlagsToZeroZSP(optionsCPU->flags);
-			optionsCPU->a &= optionsCPU->h;
-			FlagOptimizationZSP(optionsCPU->flags, optionsCPU->a);
-			optionsCPU->flags->ac = ((optionsCPU->a | optionsCPU->h) & 0x08) != 0;
-			optionsCPU->flags->cy = 0;
+			cs->cycles = 4;
+			ResetFlagsToZeroZSP(cs->flags);
+			cs->a &= cs->h;
+			FlagOptimizationZSP(cs->flags, cs->a);
+			cs->flags->ac = ((cs->a | cs->h) & 0x08) != 0;
+			cs->flags->cy = 0;
 			break;
 		case 0xa5:
-			optionsCPU->cycles = 4;
-			ResetFlagsToZeroZSP(optionsCPU->flags);
-			optionsCPU->a &= optionsCPU->l;
-			FlagOptimizationZSP(optionsCPU->flags, optionsCPU->a);
-			optionsCPU->flags->ac = ((optionsCPU->a | optionsCPU->l) & 0x08) != 0;
-			optionsCPU->flags->cy = 0;
+			cs->cycles = 4;
+			ResetFlagsToZeroZSP(cs->flags);
+			cs->a &= cs->l;
+			FlagOptimizationZSP(cs->flags, cs->a);
+			cs->flags->ac = ((cs->a | cs->l) & 0x08) != 0;
+			cs->flags->cy = 0;
 			break;
 		case 0xa6:{
-			optionsCPU->cycles = 7;
-			ResetFlagsToZeroZSP(optionsCPU->flags);
-			uint16_t HL = (optionsCPU->h << 8) | optionsCPU->l;
-			optionsCPU->a &= optionsCPU->memory[HL];
-			FlagOptimizationZSP(optionsCPU->flags, optionsCPU->a);
-			optionsCPU->flags->ac = ((optionsCPU->a | optionsCPU->memory[HL]) & 0x08) != 0;
-			optionsCPU->flags->cy = 0;
+			cs->cycles = 7;
+			ResetFlagsToZeroZSP(cs->flags);
+			uint16_t HL = (cs->h << 8) | cs->l;
+			cs->a &= cs->memory[HL];
+			FlagOptimizationZSP(cs->flags, cs->a);
+			cs->flags->ac = ((cs->a | cs->memory[HL]) & 0x08) != 0;
+			cs->flags->cy = 0;
 			break;}
 		case 0xa7:
-			optionsCPU->cycles = 4;
-			ResetFlagsToZeroZSP(optionsCPU->flags);
-			optionsCPU->a &= optionsCPU->a;
-			FlagOptimizationZSP(optionsCPU->flags, optionsCPU->a);
-			optionsCPU->flags->ac = ((optionsCPU->a | optionsCPU->a) & 0x08) != 0;
-			optionsCPU->flags->cy = 0;
+			cs->cycles = 4;
+			ResetFlagsToZeroZSP(cs->flags);
+			cs->a &= cs->a;
+			FlagOptimizationZSP(cs->flags, cs->a);
+			cs->flags->ac = ((cs->a | cs->a) & 0x08) != 0;
+			cs->flags->cy = 0;
 			break;
 		case 0xa8:
-			optionsCPU->cycles = 4;
-			ResetFlagsToZeroZSP(optionsCPU->flags);
-			optionsCPU->flags->cy = 0;
-			optionsCPU->a ^= optionsCPU->b;
-			FlagOptimizationZSP(optionsCPU->flags, optionsCPU->a);
-			optionsCPU->flags->ac = 0;
-			optionsCPU->flags->cy = 0;
+			cs->cycles = 4;
+			ResetFlagsToZeroZSP(cs->flags);
+			cs->flags->cy = 0;
+			cs->a ^= cs->b;
+			FlagOptimizationZSP(cs->flags, cs->a);
+			cs->flags->ac = 0;
+			cs->flags->cy = 0;
 			break;
 		case 0xa9:
-			optionsCPU->cycles = 4;
-			ResetFlagsToZeroZSP(optionsCPU->flags);
-			optionsCPU->flags->cy = 0;
-			optionsCPU->a ^= optionsCPU->c;
-			FlagOptimizationZSP(optionsCPU->flags, optionsCPU->a);
-			optionsCPU->flags->ac = 0;
-			optionsCPU->flags->cy = 0;
+			cs->cycles = 4;
+			ResetFlagsToZeroZSP(cs->flags);
+			cs->flags->cy = 0;
+			cs->a ^= cs->c;
+			FlagOptimizationZSP(cs->flags, cs->a);
+			cs->flags->ac = 0;
+			cs->flags->cy = 0;
 			break;
 		case 0xaa:
-			optionsCPU->cycles = 4;
-			ResetFlagsToZeroZSP(optionsCPU->flags);
-			optionsCPU->flags->cy = 0;
-			optionsCPU->a ^= optionsCPU->d;
-			FlagOptimizationZSP(optionsCPU->flags, optionsCPU->a);
-			optionsCPU->flags->ac = 0;
-			optionsCPU->flags->cy = 0;
+			cs->cycles = 4;
+			ResetFlagsToZeroZSP(cs->flags);
+			cs->flags->cy = 0;
+			cs->a ^= cs->d;
+			FlagOptimizationZSP(cs->flags, cs->a);
+			cs->flags->ac = 0;
+			cs->flags->cy = 0;
 			break;
 		case 0xab:
-			optionsCPU->cycles = 4;
-			ResetFlagsToZeroZSP(optionsCPU->flags);
-			optionsCPU->flags->cy = 0;
-			optionsCPU->a ^= optionsCPU->e;
-			FlagOptimizationZSP(optionsCPU->flags, optionsCPU->a);
-			optionsCPU->flags->ac = 0;
-			optionsCPU->flags->cy = 0;
+			cs->cycles = 4;
+			ResetFlagsToZeroZSP(cs->flags);
+			cs->flags->cy = 0;
+			cs->a ^= cs->e;
+			FlagOptimizationZSP(cs->flags, cs->a);
+			cs->flags->ac = 0;
+			cs->flags->cy = 0;
 			break;
 		case 0xac:
-			optionsCPU->cycles = 4;
-			ResetFlagsToZeroZSP(optionsCPU->flags);
-			optionsCPU->flags->cy = 0;
-			optionsCPU->a ^= optionsCPU->h;
-			FlagOptimizationZSP(optionsCPU->flags, optionsCPU->a);
-			optionsCPU->flags->ac = 0;
-			optionsCPU->flags->cy = 0;
+			cs->cycles = 4;
+			ResetFlagsToZeroZSP(cs->flags);
+			cs->flags->cy = 0;
+			cs->a ^= cs->h;
+			FlagOptimizationZSP(cs->flags, cs->a);
+			cs->flags->ac = 0;
+			cs->flags->cy = 0;
 			break;
 		case 0xad:
-			optionsCPU->cycles = 4;
-			ResetFlagsToZeroZSP(optionsCPU->flags);
-			optionsCPU->flags->cy = 0;
-			optionsCPU->a ^= optionsCPU->l;
-			FlagOptimizationZSP(optionsCPU->flags, optionsCPU->a);
-			optionsCPU->flags->ac = 0;
-			optionsCPU->flags->cy = 0;
+			cs->cycles = 4;
+			ResetFlagsToZeroZSP(cs->flags);
+			cs->flags->cy = 0;
+			cs->a ^= cs->l;
+			FlagOptimizationZSP(cs->flags, cs->a);
+			cs->flags->ac = 0;
+			cs->flags->cy = 0;
 			break;
 		case 0xae:{
-			optionsCPU->cycles = 7;
-			ResetFlagsToZeroZSP(optionsCPU->flags);
-			optionsCPU->flags->cy = 0;
-			uint16_t HL = (optionsCPU->h << 8) | optionsCPU->l;
-			optionsCPU->a ^= optionsCPU->memory[HL];
-			FlagOptimizationZSP(optionsCPU->flags, optionsCPU->a);
-			optionsCPU->flags->ac = 0;
-			optionsCPU->flags->cy = 0;
+			cs->cycles = 7;
+			ResetFlagsToZeroZSP(cs->flags);
+			cs->flags->cy = 0;
+			uint16_t HL = (cs->h << 8) | cs->l;
+			cs->a ^= cs->memory[HL];
+			FlagOptimizationZSP(cs->flags, cs->a);
+			cs->flags->ac = 0;
+			cs->flags->cy = 0;
 			break;}
 		case 0xaf:
-			optionsCPU->cycles = 4;
-			ResetFlagsToZeroZSP(optionsCPU->flags);
-			optionsCPU->flags->cy = 0;
-			optionsCPU->a ^= optionsCPU->a;
-			FlagOptimizationZSP(optionsCPU->flags, optionsCPU->a);
-			optionsCPU->flags->ac = 0;
-			optionsCPU->flags->cy = 0;
+			cs->cycles = 4;
+			ResetFlagsToZeroZSP(cs->flags);
+			cs->flags->cy = 0;
+			cs->a ^= cs->a;
+			FlagOptimizationZSP(cs->flags, cs->a);
+			cs->flags->ac = 0;
+			cs->flags->cy = 0;
 			break;
 		case 0xb0:
-			optionsCPU->cycles = 4;
-			ResetFlagsToZeroZSP(optionsCPU->flags);
-			optionsCPU->flags->cy = 0;
-			optionsCPU->a |= optionsCPU->b;
-			FlagOptimizationZSP(optionsCPU->flags, optionsCPU->a);
-			optionsCPU->flags->ac = 0;
-			optionsCPU->flags->cy = 0;
+			cs->cycles = 4;
+			ResetFlagsToZeroZSP(cs->flags);
+			cs->flags->cy = 0;
+			cs->a |= cs->b;
+			FlagOptimizationZSP(cs->flags, cs->a);
+			cs->flags->ac = 0;
+			cs->flags->cy = 0;
 			break;
 		case 0xb1:
-			optionsCPU->cycles = 4;
-			ResetFlagsToZeroZSP(optionsCPU->flags);
-			optionsCPU->flags->cy = 0;
-			optionsCPU->a |= optionsCPU->c;
-			FlagOptimizationZSP(optionsCPU->flags, optionsCPU->a);
-			optionsCPU->flags->ac = 0;
-			optionsCPU->flags->cy = 0;
+			cs->cycles = 4;
+			ResetFlagsToZeroZSP(cs->flags);
+			cs->flags->cy = 0;
+			cs->a |= cs->c;
+			FlagOptimizationZSP(cs->flags, cs->a);
+			cs->flags->ac = 0;
+			cs->flags->cy = 0;
 			break;
 		case 0xb2:
-			optionsCPU->cycles = 4;
-			ResetFlagsToZeroZSP(optionsCPU->flags);
-			optionsCPU->flags->cy = 0;
-			optionsCPU->a |= optionsCPU->d;
-			FlagOptimizationZSP(optionsCPU->flags, optionsCPU->a);
-			optionsCPU->flags->ac = 0;
-			optionsCPU->flags->cy = 0;
+			cs->cycles = 4;
+			ResetFlagsToZeroZSP(cs->flags);
+			cs->flags->cy = 0;
+			cs->a |= cs->d;
+			FlagOptimizationZSP(cs->flags, cs->a);
+			cs->flags->ac = 0;
+			cs->flags->cy = 0;
 			break;
 		case 0xb3:
-			optionsCPU->cycles = 4;
-			ResetFlagsToZeroZSP(optionsCPU->flags);
-			optionsCPU->flags->cy = 0;
-			optionsCPU->a |= optionsCPU->e;
-			FlagOptimizationZSP(optionsCPU->flags, optionsCPU->a);
-			optionsCPU->flags->ac = 0;
-			optionsCPU->flags->cy = 0;
+			cs->cycles = 4;
+			ResetFlagsToZeroZSP(cs->flags);
+			cs->flags->cy = 0;
+			cs->a |= cs->e;
+			FlagOptimizationZSP(cs->flags, cs->a);
+			cs->flags->ac = 0;
+			cs->flags->cy = 0;
 			break;
 		case 0xb4:
-			optionsCPU->cycles = 4;
-			ResetFlagsToZeroZSP(optionsCPU->flags);
-			optionsCPU->flags->cy = 0;
-			optionsCPU->a |= optionsCPU->h;
-			FlagOptimizationZSP(optionsCPU->flags, optionsCPU->a);
-			optionsCPU->flags->ac = 0;
-			optionsCPU->flags->cy = 0;
+			cs->cycles = 4;
+			ResetFlagsToZeroZSP(cs->flags);
+			cs->flags->cy = 0;
+			cs->a |= cs->h;
+			FlagOptimizationZSP(cs->flags, cs->a);
+			cs->flags->ac = 0;
+			cs->flags->cy = 0;
 			break;
 		case 0xb5:
-			optionsCPU->cycles = 4;
-			ResetFlagsToZeroZSP(optionsCPU->flags);
-			optionsCPU->flags->cy = 0;
-			optionsCPU->a |= optionsCPU->l;
-			FlagOptimizationZSP(optionsCPU->flags, optionsCPU->a);
-			optionsCPU->flags->ac = 0;
-			optionsCPU->flags->cy = 0;
+			cs->cycles = 4;
+			ResetFlagsToZeroZSP(cs->flags);
+			cs->flags->cy = 0;
+			cs->a |= cs->l;
+			FlagOptimizationZSP(cs->flags, cs->a);
+			cs->flags->ac = 0;
+			cs->flags->cy = 0;
 			break;
 		case 0xb6:{
-			optionsCPU->cycles = 7;
-			ResetFlagsToZeroZSP(optionsCPU->flags);
-			optionsCPU->flags->cy = 0;
-			uint16_t HL = (optionsCPU->h << 8) | optionsCPU->l;
-			optionsCPU->a |= optionsCPU->memory[HL];
-			FlagOptimizationZSP(optionsCPU->flags, optionsCPU->a);
-			optionsCPU->flags->ac = 0;
-			optionsCPU->flags->cy = 0;
+			cs->cycles = 7;
+			ResetFlagsToZeroZSP(cs->flags);
+			cs->flags->cy = 0;
+			uint16_t HL = (cs->h << 8) | cs->l;
+			cs->a |= cs->memory[HL];
+			FlagOptimizationZSP(cs->flags, cs->a);
+			cs->flags->ac = 0;
+			cs->flags->cy = 0;
 			break;}
 		case 0xb7:
-			optionsCPU->cycles = 4;
-			ResetFlagsToZeroZSP(optionsCPU->flags);
-			optionsCPU->flags->cy = 0;
-			optionsCPU->a |= optionsCPU->a;
-			FlagOptimizationZSP(optionsCPU->flags, optionsCPU->a);
-			optionsCPU->flags->ac = 0;
-			optionsCPU->flags->cy = 0;
+			cs->cycles = 4;
+			ResetFlagsToZeroZSP(cs->flags);
+			cs->flags->cy = 0;
+			cs->a |= cs->a;
+			FlagOptimizationZSP(cs->flags, cs->a);
+			cs->flags->ac = 0;
+			cs->flags->cy = 0;
 			break;
 		case 0xb8:{
-			optionsCPU->cycles = 4;
-			uint16_t res = optionsCPU->a - optionsCPU->b;
+			cs->cycles = 4;
+			uint16_t res = cs->a - cs->b;
 			uint16_t res8 = res & 0xFF;
-			optionsCPU->flags->ac = ((optionsCPU->a ^ optionsCPU->b ^ res8) &  0x10) != 0;
-			ResetFlagsToZeroZSP(optionsCPU->flags);
-			FlagOptimizationZSP(optionsCPU->flags, res);
-			optionsCPU->flags->cy = optionsCPU->a < optionsCPU->b;
+			cs->flags->ac = ((cs->a ^ cs->b ^ res8) &  0x10) != 0;
+			ResetFlagsToZeroZSP(cs->flags);
+			FlagOptimizationZSP(cs->flags, res);
+			cs->flags->cy = cs->a < cs->b;
 			break;}
 		case 0xb9:{
-			optionsCPU->cycles = 4;
-			uint16_t res = optionsCPU->a - optionsCPU->c;
+			cs->cycles = 4;
+			uint16_t res = cs->a - cs->c;
 			uint16_t res8 = res & 0xFF;
-			optionsCPU->flags->ac = ((optionsCPU->a ^ optionsCPU->c ^ res8) &  0x10) != 0;
-			ResetFlagsToZeroZSP(optionsCPU->flags);
-			FlagOptimizationZSP(optionsCPU->flags, res);
-			optionsCPU->flags->cy = optionsCPU->a < optionsCPU->c;
+			cs->flags->ac = ((cs->a ^ cs->c ^ res8) &  0x10) != 0;
+			ResetFlagsToZeroZSP(cs->flags);
+			FlagOptimizationZSP(cs->flags, res);
+			cs->flags->cy = cs->a < cs->c;
 			break;}
 		case 0xba:{
-			optionsCPU->cycles = 4;
-			uint16_t res = optionsCPU->a - optionsCPU->d;
+			cs->cycles = 4;
+			uint16_t res = cs->a - cs->d;
 			uint16_t res8 = res & 0xFF;
-			optionsCPU->flags->ac = ((optionsCPU->a ^ optionsCPU->d ^ res8) &  0x10) != 0;
-			ResetFlagsToZeroZSP(optionsCPU->flags);
-			FlagOptimizationZSP(optionsCPU->flags, res);
-			optionsCPU->flags->cy = optionsCPU->a < optionsCPU->d;
+			cs->flags->ac = ((cs->a ^ cs->d ^ res8) &  0x10) != 0;
+			ResetFlagsToZeroZSP(cs->flags);
+			FlagOptimizationZSP(cs->flags, res);
+			cs->flags->cy = cs->a < cs->d;
 			break;}
 		case 0xbb:{
-			optionsCPU->cycles = 4;
-			uint16_t res = optionsCPU->a - optionsCPU->e;
+			cs->cycles = 4;
+			uint16_t res = cs->a - cs->e;
 			uint16_t res8 = res & 0xFF;
-			optionsCPU->flags->ac = ((optionsCPU->a ^ optionsCPU->e ^ res8) &  0x10) != 0;
-			ResetFlagsToZeroZSP(optionsCPU->flags);
-			FlagOptimizationZSP(optionsCPU->flags, res);
-			optionsCPU->flags->cy = optionsCPU->a < optionsCPU->e;
+			cs->flags->ac = ((cs->a ^ cs->e ^ res8) &  0x10) != 0;
+			ResetFlagsToZeroZSP(cs->flags);
+			FlagOptimizationZSP(cs->flags, res);
+			cs->flags->cy = cs->a < cs->e;
 			break;}
 		case 0xbc:{
-			optionsCPU->cycles = 4;
-			uint16_t res = optionsCPU->a - optionsCPU->h;
+			cs->cycles = 4;
+			uint16_t res = cs->a - cs->h;
 			uint16_t res8 = res & 0xFF;
-			optionsCPU->flags->ac = ((optionsCPU->a ^ optionsCPU->h ^ res8) &  0x10) != 0;
-			ResetFlagsToZeroZSP(optionsCPU->flags);
-			FlagOptimizationZSP(optionsCPU->flags, res);
-			optionsCPU->flags->cy = optionsCPU->a < optionsCPU->h;
+			cs->flags->ac = ((cs->a ^ cs->h ^ res8) &  0x10) != 0;
+			ResetFlagsToZeroZSP(cs->flags);
+			FlagOptimizationZSP(cs->flags, res);
+			cs->flags->cy = cs->a < cs->h;
 			break;}
 		case 0xbd:{
-			optionsCPU->cycles = 4;
-			uint16_t res = optionsCPU->a - optionsCPU->l;
+			cs->cycles = 4;
+			uint16_t res = cs->a - cs->l;
 			uint16_t res8 = res & 0xFF;
-			optionsCPU->flags->ac = ((optionsCPU->a ^ optionsCPU->l ^ res8) &  0x10) != 0;
-			ResetFlagsToZeroZSP(optionsCPU->flags);
-			FlagOptimizationZSP(optionsCPU->flags, res);
-			optionsCPU->flags->cy = optionsCPU->a < optionsCPU->l;
+			cs->flags->ac = ((cs->a ^ cs->l ^ res8) &  0x10) != 0;
+			ResetFlagsToZeroZSP(cs->flags);
+			FlagOptimizationZSP(cs->flags, res);
+			cs->flags->cy = cs->a < cs->l;
 			break;}
 		case 0xbe:{
-			optionsCPU->cycles = 7;
-			uint16_t HL = (optionsCPU->h << 8) | optionsCPU->l;
-			uint16_t res = optionsCPU->a - optionsCPU->memory[HL];
+			cs->cycles = 7;
+			uint16_t HL = (cs->h << 8) | cs->l;
+			uint16_t res = cs->a - cs->memory[HL];
 			uint16_t res8 = res & 0xFF;
-			optionsCPU->flags->ac = ((optionsCPU->a ^ optionsCPU->memory[HL] ^ res8) &  0x10) != 0;
-			ResetFlagsToZeroZSP(optionsCPU->flags);
-			FlagOptimizationZSP(optionsCPU->flags, res);
-			optionsCPU->flags->cy = optionsCPU->a < optionsCPU->memory[HL];
+			cs->flags->ac = ((cs->a ^ cs->memory[HL] ^ res8) &  0x10) != 0;
+			ResetFlagsToZeroZSP(cs->flags);
+			FlagOptimizationZSP(cs->flags, res);
+			cs->flags->cy = cs->a < cs->memory[HL];
 			break;}
 		case 0xbf:{
-			optionsCPU->cycles = 4;
-			uint16_t res = optionsCPU->a - optionsCPU->a;
+			cs->cycles = 4;
+			uint16_t res = cs->a - cs->a;
 			uint16_t res8 = res & 0xFF;
-			optionsCPU->flags->ac = ((optionsCPU->a ^ optionsCPU->a ^ res8) &  0x10) != 0;
-			ResetFlagsToZeroZSP(optionsCPU->flags);
-			FlagOptimizationZSP(optionsCPU->flags, res);
-			optionsCPU->flags->cy = optionsCPU->a < optionsCPU->a;
+			cs->flags->ac = ((cs->a ^ cs->a ^ res8) &  0x10) != 0;
+			ResetFlagsToZeroZSP(cs->flags);
+			FlagOptimizationZSP(cs->flags, res);
+			cs->flags->cy = cs->a < cs->a;
 			break;}
 		case 0xc0:{
-			optionsCPU->cycles = 5;
-			if(!optionsCPU->flags->z)
+			cs->cycles = 5;
+			if(!cs->flags->z)
 			{
-				uint16_t sp = optionsCPU->sp;
-				uint8_t high = optionsCPU->memory[sp + 1];
-				uint8_t low = optionsCPU->memory[sp];
-				optionsCPU->pc = (high << 8) | low;
-				optionsCPU->sp +=2;
-				optionsCPU->cycles = 11;
+				uint16_t sp = cs->sp;
+				uint8_t high = cs->memory[sp + 1];
+				uint8_t low = cs->memory[sp];
+				cs->pc = (high << 8) | low;
+				cs->sp +=2;
+				cs->cycles = 11;
 				return;
 			}
 			break;}
 		case 0xc1:{
-			optionsCPU->cycles = 10;
-			uint16_t sp = optionsCPU->sp;
-			optionsCPU->b = optionsCPU->memory[sp + 1];
-			optionsCPU->c = optionsCPU->memory[sp];
-			optionsCPU->sp += 2;
+			cs->cycles = 10;
+			uint16_t sp = cs->sp;
+			cs->b = cs->memory[sp + 1];
+			cs->c = cs->memory[sp];
+			cs->sp += 2;
 			break;}
 		case 0xc2:{
-			optionsCPU->cycles = 10;
-			if(!optionsCPU->flags->z)
+			cs->cycles = 10;
+			if(!cs->flags->z)
 			{
-				uint16_t adr = (optionsCPU->memory[optionsCPU->pc + 2] << 8) | optionsCPU->memory[optionsCPU->pc + 1];
-				optionsCPU->pc = adr;
+				uint16_t adr = (cs->memory[cs->pc + 2] << 8) | cs->memory[cs->pc + 1];
+				cs->pc = adr;
 				return;
 			}
-			optionsCPU->pc += 2;
+			cs->pc += 2;
 			break;}
 		case 0xc3:{
-			optionsCPU->cycles = 10;
-			uint16_t pc =  optionsCPU->pc;
-			optionsCPU->pc = ((optionsCPU->memory[pc + 2]) << 8) | optionsCPU->memory[pc + 1];
+			cs->cycles = 10;
+			uint16_t pc =  cs->pc;
+			cs->pc = ((cs->memory[pc + 2]) << 8) | cs->memory[pc + 1];
 			return;
 			break;}
 		case 0xc4:{
-			optionsCPU->cycles = 11;
-		 	uint16_t pc = optionsCPU->pc;
-			uint16_t adr = (optionsCPU->memory[pc + 2] << 8) | optionsCPU->memory[pc + 1];
+			cs->cycles = 11;
+		 	uint16_t pc = cs->pc;
+			uint16_t adr = (cs->memory[pc + 2] << 8) | cs->memory[pc + 1];
 
-			if(!optionsCPU->flags->z)
+			if(!cs->flags->z)
 			{
-				uint16_t ret = optionsCPU->pc + 3;
-				optionsCPU->memory[--optionsCPU->sp] = ret >> 8;
-				optionsCPU->memory[--optionsCPU->sp] = ret;
-				optionsCPU->pc = adr;
-				optionsCPU->cycles = 17;
+				uint16_t ret = cs->pc + 3;
+				cs->memory[--cs->sp] = ret >> 8;
+				cs->memory[--cs->sp] = ret;
+				cs->pc = adr;
+				cs->cycles = 17;
 				return;
 			}
 			else
-				optionsCPU->pc += 2;
+				cs->pc += 2;
 			break;}
 		case 0xc5:
-			optionsCPU->cycles = 11;
-			optionsCPU->memory[optionsCPU->sp - 2] = optionsCPU->c;
-			optionsCPU->memory[optionsCPU->sp - 1] = optionsCPU->b;
-			optionsCPU->sp -= 2;
+			cs->cycles = 11;
+			cs->memory[cs->sp - 2] = cs->c;
+			cs->memory[cs->sp - 1] = cs->b;
+			cs->sp -= 2;
 			break;
 		case 0xc6:
-			optionsCPU->cycles = 7; {
-			uint16_t res = optionsCPU->a + optionsCPU->memory[optionsCPU->pc + 1];
-			optionsCPU->flags->ac = ((optionsCPU->a & 0x0F) + (optionsCPU->memory[optionsCPU->pc +  1] & 0x0F)) > 0x0F;
-			optionsCPU->a = res;
-			ResetFlagsToZeroZSP(optionsCPU->flags);
-			FlagOptimizationZSP(optionsCPU->flags, res);
-			optionsCPU->flags->cy = res > 0xFF;
-			optionsCPU->pc += 1;
+			cs->cycles = 7; {
+			uint16_t res = cs->a + cs->memory[cs->pc + 1];
+			cs->flags->ac = ((cs->a & 0x0F) + (cs->memory[cs->pc +  1] & 0x0F)) > 0x0F;
+			cs->a = res;
+			ResetFlagsToZeroZSP(cs->flags);
+			FlagOptimizationZSP(cs->flags, res);
+			cs->flags->cy = res > 0xFF;
+			cs->pc += 1;
 			break;}
 		case 0xc7:{
-			optionsCPU->cycles = 11;
-			uint16_t res = optionsCPU->pc + 1;
-			uint16_t sp = optionsCPU->sp;
-			optionsCPU->memory[sp - 1] = res >> 8; 
-			optionsCPU->memory[sp - 2] = res;
-			optionsCPU->sp-= 2;
-			optionsCPU->pc = 0x0000;
+			cs->cycles = 11;
+			uint16_t res = cs->pc + 1;
+			uint16_t sp = cs->sp;
+			cs->memory[sp - 1] = res >> 8; 
+			cs->memory[sp - 2] = res;
+			cs->sp-= 2;
+			cs->pc = 0x0000;
 			return;
 			break;}
 		case 0xc8:{
-			optionsCPU->cycles = 5;
-			if(optionsCPU->flags->z)
+			cs->cycles = 5;
+			if(cs->flags->z)
 			{
-				uint16_t sp = optionsCPU->sp;
-				optionsCPU->pc = ((optionsCPU->memory[sp + 1]) << 8) | optionsCPU->memory[sp];
-				optionsCPU->sp += 2;
-				optionsCPU->cycles = 11;
+				uint16_t sp = cs->sp;
+				cs->pc = ((cs->memory[sp + 1]) << 8) | cs->memory[sp];
+				cs->sp += 2;
+				cs->cycles = 11;
 				return;
 			}
 			break;}
 		case 0xc9:{
-			optionsCPU->cycles = 10;
-			uint16_t sp = optionsCPU->sp;
-			optionsCPU->pc = (optionsCPU->memory[sp + 1] << 8) | optionsCPU->memory[sp];
-			optionsCPU->sp += 2;
+			cs->cycles = 10;
+			uint16_t sp = cs->sp;
+			cs->pc = (cs->memory[sp + 1] << 8) | cs->memory[sp];
+			cs->sp += 2;
 			return;
 			break;}
 		case 0xca:{
-			optionsCPU->cycles = 10;	
-			if(optionsCPU->flags->z)
+			cs->cycles = 10;	
+			if(cs->flags->z)
 			{
-				uint16_t pc = optionsCPU->pc;
-				optionsCPU->pc = (optionsCPU->memory[pc + 2] << 8) | optionsCPU->memory[pc + 1];
+				uint16_t pc = cs->pc;
+				cs->pc = (cs->memory[pc + 2] << 8) | cs->memory[pc + 1];
 				return;
 			}
-			optionsCPU->pc += 2;
+			cs->pc += 2;
 			break;}
 		case 0xcb:
-			optionsCPU->cycles = 4;
+			cs->cycles = 4;
 			break;
 		case 0xcc:{
-			optionsCPU->cycles = 11;
-		 	uint16_t pc = optionsCPU->pc;
-			uint16_t adr = (optionsCPU->memory[pc + 2] << 8) | optionsCPU->memory[pc + 1];
-			if(optionsCPU->flags->z)
+			cs->cycles = 11;
+		 	uint16_t pc = cs->pc;
+			uint16_t adr = (cs->memory[pc + 2] << 8) | cs->memory[pc + 1];
+			if(cs->flags->z)
 			{
-				uint16_t ret = optionsCPU->pc + 3;
-				optionsCPU->memory[--optionsCPU->sp] = ret >> 8;
-				optionsCPU->memory[--optionsCPU->sp] = ret;
-				optionsCPU->pc = adr; 
-				optionsCPU->cycles = 17;
+				uint16_t ret = cs->pc + 3;
+				cs->memory[--cs->sp] = ret >> 8;
+				cs->memory[--cs->sp] = ret;
+				cs->pc = adr; 
+				cs->cycles = 17;
 				return;
 			}
-			optionsCPU->pc += 2;
+			cs->pc += 2;
 			break;}
 		case 0xcd:{
-			optionsCPU->cycles = 17;
-			uint16_t sp = optionsCPU->sp;
-			uint16_t pc = optionsCPU->pc;
-			uint16_t adr = (optionsCPU->memory[pc + 2] << 8) | optionsCPU->memory[pc + 1];
+			cs->cycles = 17;
+			uint16_t sp = cs->sp;
+			uint16_t pc = cs->pc;
+			uint16_t adr = (cs->memory[pc + 2] << 8) | cs->memory[pc + 1];
 			pc +=  3;
-			optionsCPU->memory[sp - 1] = pc >> 8;
-			optionsCPU->memory[sp - 2] = pc;
-			optionsCPU->sp -=2;
-			optionsCPU->pc = adr;
+			cs->memory[sp - 1] = pc >> 8;
+			cs->memory[sp - 2] = pc;
+			cs->sp -=2;
+			cs->pc = adr;
 			return;
 			break;}
 		case 0xce:{
-			optionsCPU->cycles = 7;
-			uint8_t data = optionsCPU->memory[optionsCPU->pc + 1];
-			uint16_t res= optionsCPU->a + data + optionsCPU->flags->cy;
-			optionsCPU->flags->ac = ((optionsCPU->a & 0x0F) + (data & 0x0F) + optionsCPU->flags->cy) > 0x0F;
-			optionsCPU->a = res;
+			cs->cycles = 7;
+			uint8_t data = cs->memory[cs->pc + 1];
+			uint16_t res= cs->a + data + cs->flags->cy;
+			cs->flags->ac = ((cs->a & 0x0F) + (data & 0x0F) + cs->flags->cy) > 0x0F;
+			cs->a = res;
 
-			ResetFlagsToZeroZSP(optionsCPU->flags);
-			FlagOptimizationZSP(optionsCPU->flags, optionsCPU->a);
-			optionsCPU->flags->cy = res > 0xFF;
-			optionsCPU->pc += 1;
+			ResetFlagsToZeroZSP(cs->flags);
+			FlagOptimizationZSP(cs->flags, cs->a);
+			cs->flags->cy = res > 0xFF;
+			cs->pc += 1;
 			break;}
 		case 0xcf:{
-			optionsCPU->cycles = 11;
-			uint16_t ret = optionsCPU->pc + 1;
-			uint16_t sp = optionsCPU->sp;
-			optionsCPU->memory[sp - 1] = ret >> 8;
-			optionsCPU->memory[sp - 2] = ret;
-			optionsCPU->sp -= 2;
-			optionsCPU->pc = 0x0008;
+			cs->cycles = 11;
+			uint16_t ret = cs->pc + 1;
+			uint16_t sp = cs->sp;
+			cs->memory[sp - 1] = ret >> 8;
+			cs->memory[sp - 2] = ret;
+			cs->sp -= 2;
+			cs->pc = 0x0008;
 			return;
 			break;}
 		case 0xd0:{
-			optionsCPU->cycles = 5;
-			if(!optionsCPU->flags->cy)
+			cs->cycles = 5;
+			if(!cs->flags->cy)
 			{
-				uint16_t sp = optionsCPU->sp;
-				optionsCPU->pc = (optionsCPU->memory[sp + 1] << 8) | optionsCPU->memory[sp];
-				optionsCPU->sp += 2;
-				optionsCPU->cycles = 11;
+				uint16_t sp = cs->sp;
+				cs->pc = (cs->memory[sp + 1] << 8) | cs->memory[sp];
+				cs->sp += 2;
+				cs->cycles = 11;
 				return;
 			}
 			break;}
 		case 0xd1:{
-			optionsCPU->cycles = 10;
-			uint16_t sp = optionsCPU->sp;
-			optionsCPU->e = optionsCPU->memory[sp];
-			optionsCPU->d = optionsCPU->memory[sp + 1];
-			optionsCPU->sp += 2;
+			cs->cycles = 10;
+			uint16_t sp = cs->sp;
+			cs->e = cs->memory[sp];
+			cs->d = cs->memory[sp + 1];
+			cs->sp += 2;
 			break;}
 		case 0xd2:{
-			optionsCPU->cycles = 10;
-			if(!optionsCPU->flags->cy)
+			cs->cycles = 10;
+			if(!cs->flags->cy)
 			{
-				uint16_t pc = optionsCPU->pc;
-				uint16_t adr = (optionsCPU->memory[pc + 2] << 8) | optionsCPU->memory[pc + 1];
-				optionsCPU->pc = adr;
+				uint16_t pc = cs->pc;
+				uint16_t adr = (cs->memory[pc + 2] << 8) | cs->memory[pc + 1];
+				cs->pc = adr;
 				return;
 			}
-			optionsCPU->pc += 2;
+			cs->pc += 2;
 			break;}
 		case 0xd3:{
-			optionsCPU->cycles = 10;
-			uint8_t port = optionsCPU->memory[optionsCPU->pc +1];
+			cs->cycles = 10;
+			uint8_t port = cs->memory[cs->pc +1];
 			switch(port)
 			{
 				case 2:
-					optionsCPU->so = optionsCPU->a & 0x07;
+					cs->so = cs->a & 0x07;
 					break;
 				case 4:
-					optionsCPU->sr = (optionsCPU->a << 8) | (optionsCPU->sr >> 8);
+					cs->sr = (cs->a << 8) | (cs->sr >> 8);
 					break;
 			}
-			optionsCPU->pc += 1;
+			cs->pc += 1;
 			break;}
 		case 0xd4:{
-			optionsCPU->cycles = 11;
-			if(!optionsCPU->flags->cy)
+			cs->cycles = 11;
+			if(!cs->flags->cy)
 			{
-				uint16_t pc = optionsCPU->pc;
-				uint16_t ret = optionsCPU->pc + 3;
-				uint16_t sp = optionsCPU->sp;
-				optionsCPU->pc = (optionsCPU->memory[pc + 2] << 8) | optionsCPU->memory[pc + 1];
-				optionsCPU->memory[sp - 1] = ret >> 8;
-				optionsCPU->memory[sp - 2] = ret;
-				optionsCPU->sp -= 2;
-				optionsCPU->cycles = 17;
+				uint16_t pc = cs->pc;
+				uint16_t ret = cs->pc + 3;
+				uint16_t sp = cs->sp;
+				cs->pc = (cs->memory[pc + 2] << 8) | cs->memory[pc + 1];
+				cs->memory[sp - 1] = ret >> 8;
+				cs->memory[sp - 2] = ret;
+				cs->sp -= 2;
+				cs->cycles = 17;
 				return;
 			}
-			optionsCPU->pc += 2;
+			cs->pc += 2;
 			break;}
 		case 0xd5:{
-			optionsCPU->cycles = 11;
-			uint16_t sp = optionsCPU->sp;
-			optionsCPU->memory[sp - 1] = optionsCPU->d;
-			optionsCPU->memory[sp - 2] = optionsCPU->e;
-			optionsCPU->sp -= 2;
+			cs->cycles = 11;
+			uint16_t sp = cs->sp;
+			cs->memory[sp - 1] = cs->d;
+			cs->memory[sp - 2] = cs->e;
+			cs->sp -= 2;
 			break;}
 		case 0xd6:{
-			optionsCPU->cycles = 7;
-			uint8_t data =  optionsCPU->memory[++optionsCPU->pc];
-			uint16_t res = optionsCPU->a - data;
+			cs->cycles = 7;
+			uint8_t data =  cs->memory[++cs->pc];
+			uint16_t res = cs->a - data;
 			uint8_t res8 = res & 0xFF;
-			optionsCPU->flags->ac = ((optionsCPU->a ^ data ^ res8) & 0x10) != 0;
-			optionsCPU->a = res;
-			ResetFlagsToZeroZSP(optionsCPU->flags);
-			FlagOptimizationZSP(optionsCPU->flags, optionsCPU->a);
-			optionsCPU->flags->cy = res > 0xFF;
+			cs->flags->ac = ((cs->a ^ data ^ res8) & 0x10) != 0;
+			cs->a = res;
+			ResetFlagsToZeroZSP(cs->flags);
+			FlagOptimizationZSP(cs->flags, cs->a);
+			cs->flags->cy = res > 0xFF;
 			break;}
 		case 0xd7:{
-			optionsCPU->cycles = 11;
-			uint16_t sp = optionsCPU->sp;
-			uint16_t pc = optionsCPU->pc + 1;
-			optionsCPU->memory[sp - 1] = pc >> 8;
-			optionsCPU->memory[sp - 2] = pc;
-			optionsCPU->sp -= 2;
-			optionsCPU->pc = 0x0010;
+			cs->cycles = 11;
+			uint16_t sp = cs->sp;
+			uint16_t pc = cs->pc + 1;
+			cs->memory[sp - 1] = pc >> 8;
+			cs->memory[sp - 2] = pc;
+			cs->sp -= 2;
+			cs->pc = 0x0010;
 			return;
 			break;}
 		case 0xd8:{
-			optionsCPU->cycles = 5;
-			if(optionsCPU->flags->cy)
+			cs->cycles = 5;
+			if(cs->flags->cy)
 			{
-				uint16_t sp = optionsCPU->sp;
-				optionsCPU->pc = (optionsCPU->memory[sp + 1] << 8) | optionsCPU->memory[sp];
-				optionsCPU->sp += 2;
-				optionsCPU->cycles = 11;
+				uint16_t sp = cs->sp;
+				cs->pc = (cs->memory[sp + 1] << 8) | cs->memory[sp];
+				cs->sp += 2;
+				cs->cycles = 11;
 				return;
 			}
 			break;}
 		case 0xd9:
-			optionsCPU->cycles = 4;
+			cs->cycles = 4;
 			break;
 		case 0xda:{
-			optionsCPU->cycles = 10;
-			if(optionsCPU->flags->cy)
+			cs->cycles = 10;
+			if(cs->flags->cy)
 			{
-				uint16_t pc = optionsCPU->pc;
-				uint16_t adr = (optionsCPU->memory[pc + 2] << 8) | optionsCPU->memory[pc + 1];
-				optionsCPU->pc = adr;
+				uint16_t pc = cs->pc;
+				uint16_t adr = (cs->memory[pc + 2] << 8) | cs->memory[pc + 1];
+				cs->pc = adr;
 				return;
 			}
-			optionsCPU->pc += 2;
+			cs->pc += 2;
 			break;}
 		case 0xdb:{
-			optionsCPU->cycles = 10;
-			uint8_t port = optionsCPU->memory[optionsCPU->pc +1];
+			cs->cycles = 10;
+			uint8_t port = cs->memory[cs->pc +1];
 			switch(port)
 			{
 				case 3:
-					optionsCPU->a = (optionsCPU->sr >> (8 - optionsCPU->so)) & 0xff;
+					cs->a = (cs->sr >> (8 - cs->so)) & 0xff;
 					break;
 				default:
-					optionsCPU->a = optionsCPU->ports[port];
+					cs->a = cs->ports[port];
 					break;
 			}
-			optionsCPU->pc += 1;
+			cs->pc += 1;
 			break;}
 		case 0xdc:{
-			optionsCPU->cycles = 11;
-			if(optionsCPU->flags->cy)
+			cs->cycles = 11;
+			if(cs->flags->cy)
 			{
-				uint16_t pc = optionsCPU->pc;
-				uint16_t ret = optionsCPU->pc + 3;
-				uint16_t sp = optionsCPU->sp;
-				optionsCPU->pc = (optionsCPU->memory[pc + 2] << 8) | optionsCPU->memory[pc + 1];
-				optionsCPU->memory[sp - 1] = ret >> 8;
-				optionsCPU->memory[sp - 2] = ret;
-				optionsCPU->sp -= 2;
-				optionsCPU->cycles = 17;
+				uint16_t pc = cs->pc;
+				uint16_t ret = cs->pc + 3;
+				uint16_t sp = cs->sp;
+				cs->pc = (cs->memory[pc + 2] << 8) | cs->memory[pc + 1];
+				cs->memory[sp - 1] = ret >> 8;
+				cs->memory[sp - 2] = ret;
+				cs->sp -= 2;
+				cs->cycles = 17;
 				return;
 			}
-			optionsCPU->pc += 2;
+			cs->pc += 2;
 			break;}
 		case 0xdd:
-			optionsCPU->cycles = 4;
+			cs->cycles = 4;
 			break;
 		case 0xde:{
-			optionsCPU->cycles = 7;
-			uint8_t data = optionsCPU->memory[optionsCPU->pc + 1];
-			uint16_t res= optionsCPU->a - data - optionsCPU->flags->cy;
+			cs->cycles = 7;
+			uint8_t data = cs->memory[cs->pc + 1];
+			uint16_t res= cs->a - data - cs->flags->cy;
 			uint8_t res8 = res & 0xFF;
-			optionsCPU->flags->ac = ((optionsCPU->a ^ data ^ res8) & 0x10) != 0;
-			ResetFlagsToZeroZSP(optionsCPU->flags);
-			optionsCPU->flags->cy = optionsCPU->a < (data + optionsCPU->flags->cy);
+			cs->flags->ac = ((cs->a ^ data ^ res8) & 0x10) != 0;
+			ResetFlagsToZeroZSP(cs->flags);
+			cs->flags->cy = cs->a < (data + cs->flags->cy);
 
-			optionsCPU->a = res;
+			cs->a = res;
 
-			FlagOptimizationZSP(optionsCPU->flags, optionsCPU->a);
-			optionsCPU->pc += 1;
+			FlagOptimizationZSP(cs->flags, cs->a);
+			cs->pc += 1;
 			break;}
 		case 0xdf:{
-			optionsCPU->cycles = 11;
-			uint16_t ret = optionsCPU->pc + 1;
-			uint16_t sp = optionsCPU->sp;
-			optionsCPU->memory[sp - 1] = ret >> 8;
-			optionsCPU->memory[sp - 2] = ret;
-			optionsCPU->sp -= 2;
-			optionsCPU->pc = 0x0018;
+			cs->cycles = 11;
+			uint16_t ret = cs->pc + 1;
+			uint16_t sp = cs->sp;
+			cs->memory[sp - 1] = ret >> 8;
+			cs->memory[sp - 2] = ret;
+			cs->sp -= 2;
+			cs->pc = 0x0018;
 			return;
 			break;}
 		case 0xe0:{
-			optionsCPU->cycles = 5;
-			if(!optionsCPU->flags->p)
+			cs->cycles = 5;
+			if(!cs->flags->p)
 			{
-				uint16_t sp = optionsCPU->sp;
-				optionsCPU->pc = (optionsCPU->memory[sp + 1] << 8) | optionsCPU->memory[sp];
-				optionsCPU->sp += 2;
-				optionsCPU->cycles = 11;
+				uint16_t sp = cs->sp;
+				cs->pc = (cs->memory[sp + 1] << 8) | cs->memory[sp];
+				cs->sp += 2;
+				cs->cycles = 11;
 				return;
 			}
 			break;}
 		case 0xe1:{
-			optionsCPU->cycles = 10;
-			uint16_t sp = optionsCPU->sp;
-			optionsCPU->l = optionsCPU->memory[sp];
-			optionsCPU->h = optionsCPU->memory[sp + 1];
-			optionsCPU->sp += 2;
+			cs->cycles = 10;
+			uint16_t sp = cs->sp;
+			cs->l = cs->memory[sp];
+			cs->h = cs->memory[sp + 1];
+			cs->sp += 2;
 			break;}
 		case 0xe2:{
-			optionsCPU->cycles = 10;
-			if(!optionsCPU->flags->p)
+			cs->cycles = 10;
+			if(!cs->flags->p)
 			{
-				uint16_t pc = optionsCPU->pc;
-				uint16_t adr = (optionsCPU->memory[pc + 2] << 8) | optionsCPU->memory[pc + 1];
-				optionsCPU->pc = adr;
+				uint16_t pc = cs->pc;
+				uint16_t adr = (cs->memory[pc + 2] << 8) | cs->memory[pc + 1];
+				cs->pc = adr;
 				return;
 			}
-			optionsCPU->pc += 2;
+			cs->pc += 2;
 			break;}
 		case 0xe3:{
-			optionsCPU->cycles = 18;
-			uint16_t sp = optionsCPU->sp;
-			uint8_t temp_sp = optionsCPU->memory[sp];
-			uint8_t temp_sp_1 = optionsCPU->memory[sp + 1];
+			cs->cycles = 18;
+			uint16_t sp = cs->sp;
+			uint8_t temp_sp = cs->memory[sp];
+			uint8_t temp_sp_1 = cs->memory[sp + 1];
 
-			optionsCPU->memory[sp] = optionsCPU->l;
-			optionsCPU->memory[sp + 1] = optionsCPU->h;
+			cs->memory[sp] = cs->l;
+			cs->memory[sp + 1] = cs->h;
 
-			optionsCPU->l = temp_sp;
-			optionsCPU->h = temp_sp_1;
+			cs->l = temp_sp;
+			cs->h = temp_sp_1;
 			break;}
 		case 0xe4:{
-			optionsCPU->cycles = 11;
-		 	uint16_t pc = optionsCPU->pc;
-			uint16_t adr = (optionsCPU->memory[pc + 2] << 8) | optionsCPU->memory[pc + 1];
-			if(!optionsCPU->flags->p)
+			cs->cycles = 11;
+		 	uint16_t pc = cs->pc;
+			uint16_t adr = (cs->memory[pc + 2] << 8) | cs->memory[pc + 1];
+			if(!cs->flags->p)
 			{
-				uint16_t ret = optionsCPU->pc + 3;
-				optionsCPU->memory[--optionsCPU->sp] = ret >> 8;
-				optionsCPU->memory[--optionsCPU->sp] = ret;
-				optionsCPU->pc = adr; 
-				optionsCPU->cycles = 17;
+				uint16_t ret = cs->pc + 3;
+				cs->memory[--cs->sp] = ret >> 8;
+				cs->memory[--cs->sp] = ret;
+				cs->pc = adr; 
+				cs->cycles = 17;
 				return;
 			}
-			optionsCPU->pc += 2;
+			cs->pc += 2;
 			break;}
 		case 0xe5:{
-			optionsCPU->cycles = 11;
-			uint16_t sp = optionsCPU->sp;
-			optionsCPU->memory[sp - 1] = optionsCPU->h;
-			optionsCPU->memory[sp - 2] = optionsCPU->l;
-			optionsCPU->sp -= 2;
+			cs->cycles = 11;
+			uint16_t sp = cs->sp;
+			cs->memory[sp - 1] = cs->h;
+			cs->memory[sp - 2] = cs->l;
+			cs->sp -= 2;
 			break;}
 		case 0xe6:{
-			optionsCPU->cycles = 7;
-			uint8_t data =  optionsCPU->memory[++optionsCPU->pc];
-			uint16_t res = optionsCPU->a & data;
-			optionsCPU->flags->ac = ((optionsCPU->a | data) & 0x08) != 0;
-			optionsCPU->a = res;
-			ResetFlagsToZeroZSP(optionsCPU->flags);
-			FlagOptimizationZSP(optionsCPU->flags, optionsCPU->a);
-			optionsCPU->flags->cy = 0;
+			cs->cycles = 7;
+			uint8_t data =  cs->memory[++cs->pc];
+			uint16_t res = cs->a & data;
+			cs->flags->ac = ((cs->a | data) & 0x08) != 0;
+			cs->a = res;
+			ResetFlagsToZeroZSP(cs->flags);
+			FlagOptimizationZSP(cs->flags, cs->a);
+			cs->flags->cy = 0;
 			break;}
 		case 0xe7:{
-			optionsCPU->cycles = 11;
-			uint16_t ret = optionsCPU->pc + 1;
-			uint16_t sp = optionsCPU->sp;
-			optionsCPU->memory[sp - 1] = ret >> 8;
-			optionsCPU->memory[sp - 2] = ret;
-			optionsCPU->sp -= 2;
-			optionsCPU->pc = 0x0020;
+			cs->cycles = 11;
+			uint16_t ret = cs->pc + 1;
+			uint16_t sp = cs->sp;
+			cs->memory[sp - 1] = ret >> 8;
+			cs->memory[sp - 2] = ret;
+			cs->sp -= 2;
+			cs->pc = 0x0020;
 			return;
 			break;}
 		case 0xe8:{
-			optionsCPU->cycles = 5;
-			if(optionsCPU->flags->p)
+			cs->cycles = 5;
+			if(cs->flags->p)
 			{
-				uint16_t sp = optionsCPU->sp;
-				optionsCPU->pc = (optionsCPU->memory[sp + 1] << 8) | optionsCPU->memory[sp];
-				optionsCPU->sp += 2;
-				optionsCPU->cycles = 11;
+				uint16_t sp = cs->sp;
+				cs->pc = (cs->memory[sp + 1] << 8) | cs->memory[sp];
+				cs->sp += 2;
+				cs->cycles = 11;
 				return;
 			}
 			break;}
 		case 0xe9:
-			optionsCPU->cycles = 5;
-			optionsCPU->pc = (optionsCPU->h << 8) | optionsCPU->l;
+			cs->cycles = 5;
+			cs->pc = (cs->h << 8) | cs->l;
 			return;
 			break;
 		case 0xea:{
-			optionsCPU->cycles = 10;
-			if(optionsCPU->flags->p)
+			cs->cycles = 10;
+			if(cs->flags->p)
 			{
-				uint16_t pc = optionsCPU->pc;
-				uint16_t adr = (optionsCPU->memory[pc + 2] << 8) | optionsCPU->memory[pc + 1];
-				optionsCPU->pc = adr;
+				uint16_t pc = cs->pc;
+				uint16_t adr = (cs->memory[pc + 2] << 8) | cs->memory[pc + 1];
+				cs->pc = adr;
 				return;
 			}
-			optionsCPU->pc += 2;
+			cs->pc += 2;
 			break;}
 		case 0xeb:{
-			optionsCPU->cycles = 4;
-			uint8_t temp_h = optionsCPU->h;
-			uint8_t temp_l = optionsCPU->l;
+			cs->cycles = 4;
+			uint8_t temp_h = cs->h;
+			uint8_t temp_l = cs->l;
 
-			optionsCPU->h = optionsCPU->d;
-			optionsCPU->l = optionsCPU->e;
+			cs->h = cs->d;
+			cs->l = cs->e;
 
-			optionsCPU->d = temp_h;
-			optionsCPU->e = temp_l;
+			cs->d = temp_h;
+			cs->e = temp_l;
 			break;}
 		case 0xec:{
-			optionsCPU->cycles = 11;
-		 	uint16_t pc = optionsCPU->pc;
-			uint16_t adr = (optionsCPU->memory[pc + 2] << 8) | optionsCPU->memory[pc + 1];
-			if(optionsCPU->flags->p)
+			cs->cycles = 11;
+		 	uint16_t pc = cs->pc;
+			uint16_t adr = (cs->memory[pc + 2] << 8) | cs->memory[pc + 1];
+			if(cs->flags->p)
 			{
-				uint16_t ret = optionsCPU->pc + 3;
-				optionsCPU->memory[--optionsCPU->sp] = ret >> 8;
-				optionsCPU->memory[--optionsCPU->sp] = ret;
-				optionsCPU->pc = adr; 
-				optionsCPU->cycles = 17;
+				uint16_t ret = cs->pc + 3;
+				cs->memory[--cs->sp] = ret >> 8;
+				cs->memory[--cs->sp] = ret;
+				cs->pc = adr; 
+				cs->cycles = 17;
 				return;
 			}
-			optionsCPU->pc += 2;
+			cs->pc += 2;
 			break;}
 		case 0xed:
-			optionsCPU->cycles = 4;
+			cs->cycles = 4;
 			break;
 		case 0xee:{
-			optionsCPU->cycles = 7;
-			uint8_t data =  optionsCPU->memory[++optionsCPU->pc];
-			uint16_t res = optionsCPU->a ^ data;
-			optionsCPU->a = res;
-			ResetFlagsToZeroZSP(optionsCPU->flags);
-			FlagOptimizationZSP(optionsCPU->flags, optionsCPU->a);
-			optionsCPU->flags->cy = 0;
-			optionsCPU->flags->ac = 0;
+			cs->cycles = 7;
+			uint8_t data =  cs->memory[++cs->pc];
+			uint16_t res = cs->a ^ data;
+			cs->a = res;
+			ResetFlagsToZeroZSP(cs->flags);
+			FlagOptimizationZSP(cs->flags, cs->a);
+			cs->flags->cy = 0;
+			cs->flags->ac = 0;
 			break;}
 		case 0xef:{
-			optionsCPU->cycles = 11;
-			uint16_t ret = optionsCPU->pc + 1;
-			uint16_t sp = optionsCPU->sp;
-			optionsCPU->memory[sp - 1] = ret >> 8;
-			optionsCPU->memory[sp - 2] = ret;
-			optionsCPU->sp -= 2;
-			optionsCPU->pc = 0x0028;
+			cs->cycles = 11;
+			uint16_t ret = cs->pc + 1;
+			uint16_t sp = cs->sp;
+			cs->memory[sp - 1] = ret >> 8;
+			cs->memory[sp - 2] = ret;
+			cs->sp -= 2;
+			cs->pc = 0x0028;
 			return;
 			break;}
 		case 0xf0:{
-			optionsCPU->cycles = 5;
-			if(!optionsCPU->flags->s)
+			cs->cycles = 5;
+			if(!cs->flags->s)
 			{
-				uint16_t sp = optionsCPU->sp;
-				optionsCPU->pc = (optionsCPU->memory[sp + 1] << 8) | optionsCPU->memory[sp];
-				optionsCPU->sp += 2;
-				optionsCPU->cycles = 11;
+				uint16_t sp = cs->sp;
+				cs->pc = (cs->memory[sp + 1] << 8) | cs->memory[sp];
+				cs->sp += 2;
+				cs->cycles = 11;
 				return;
 			}
 			break;}
 		case 0xf1:{
-			optionsCPU->cycles = 10;
-			uint16_t sp = optionsCPU->sp;
-			uint8_t flags =  optionsCPU->memory[sp];
-			optionsCPU->a = optionsCPU->memory[sp + 1];
+			cs->cycles = 10;
+			uint16_t sp = cs->sp;
+			uint8_t flags =  cs->memory[sp];
+			cs->a = cs->memory[sp + 1];
 
-			optionsCPU->flags->s = flags >> 7 & 0x01;
-			optionsCPU->flags->z = flags >> 6 & 0x01;
-			optionsCPU->flags->ac = flags >> 4 & 0x01;
-			optionsCPU->flags->p = flags >> 2 & 0x01;
-			optionsCPU->flags->cy = flags & 0x01;
+			cs->flags->s = flags >> 7 & 0x01;
+			cs->flags->z = flags >> 6 & 0x01;
+			cs->flags->ac = flags >> 4 & 0x01;
+			cs->flags->p = flags >> 2 & 0x01;
+			cs->flags->cy = flags & 0x01;
 
-			optionsCPU->sp += 2;
+			cs->sp += 2;
 			break;}
 		case 0xf2:{
-			optionsCPU->cycles = 10;
-			if(!optionsCPU->flags->s)
+			cs->cycles = 10;
+			if(!cs->flags->s)
 			{
-				uint16_t pc = optionsCPU->pc;
-				optionsCPU->pc = (optionsCPU->memory[pc + 2] << 8) | optionsCPU->memory[pc + 1];
+				uint16_t pc = cs->pc;
+				cs->pc = (cs->memory[pc + 2] << 8) | cs->memory[pc + 1];
 				return;
 			}
-			optionsCPU->pc += 2;
+			cs->pc += 2;
 			break;}
 		case 0xf3:
-			optionsCPU->cycles = 4;
-			optionsCPU->interrupt_enabled = 0;
+			cs->cycles = 4;
+			cs->interrupt_enabled = 0;
 			break;
 		case 0xf4:{
-			optionsCPU->cycles = 11;
-			if(!optionsCPU->flags->s)
+			cs->cycles = 11;
+			if(!cs->flags->s)
 			{
-				uint16_t pc = optionsCPU->pc;
-				uint16_t ret = optionsCPU->pc + 3;
-				uint16_t sp = optionsCPU->sp;
-				optionsCPU->memory[sp - 1] = ret >> 8;
-				optionsCPU->memory[sp - 2] = ret;
-				optionsCPU->sp -=2;
-				optionsCPU->pc = (optionsCPU->memory[pc + 2] << 8) | optionsCPU->memory[pc + 1];
-				optionsCPU->cycles = 17;
+				uint16_t pc = cs->pc;
+				uint16_t ret = cs->pc + 3;
+				uint16_t sp = cs->sp;
+				cs->memory[sp - 1] = ret >> 8;
+				cs->memory[sp - 2] = ret;
+				cs->sp -=2;
+				cs->pc = (cs->memory[pc + 2] << 8) | cs->memory[pc + 1];
+				cs->cycles = 17;
 				return;
 			}
-			optionsCPU->pc += 2;
+			cs->pc += 2;
 			break;}
 		case 0xf5:{
-			optionsCPU->cycles = 11;
+			cs->cycles = 11;
 			uint8_t flags = 0;
 
-			flags |= optionsCPU->flags->cy ? 0x01 : 0;
-			flags |= optionsCPU->flags->p ? 0x04 : 0;
-			flags |= optionsCPU->flags->ac ? 0x10 : 0;
-			flags |= optionsCPU->flags->z ? 0x40 : 0;
-			flags |= optionsCPU->flags->s ? 0x80 : 0;
+			flags |= cs->flags->cy ? 0x01 : 0;
+			flags |= cs->flags->p ? 0x04 : 0;
+			flags |= cs->flags->ac ? 0x10 : 0;
+			flags |= cs->flags->z ? 0x40 : 0;
+			flags |= cs->flags->s ? 0x80 : 0;
 			flags |= 0x02;
 
-			optionsCPU->memory[--optionsCPU->sp] = optionsCPU->a;
-			optionsCPU->memory[--optionsCPU->sp] = flags;
+			cs->memory[--cs->sp] = cs->a;
+			cs->memory[--cs->sp] = flags;
 			break;}
 		case 0xf6:{
-			optionsCPU->cycles = 7;
-			uint8_t data =  optionsCPU->memory[++optionsCPU->pc];
-			uint16_t res = optionsCPU->a | data;
-			optionsCPU->a = res;
-			ResetFlagsToZeroZSP(optionsCPU->flags);
-			FlagOptimizationZSP(optionsCPU->flags, optionsCPU->a);
-			optionsCPU->flags->cy = 0;
-			optionsCPU->flags->ac = 0;
+			cs->cycles = 7;
+			uint8_t data =  cs->memory[++cs->pc];
+			uint16_t res = cs->a | data;
+			cs->a = res;
+			ResetFlagsToZeroZSP(cs->flags);
+			FlagOptimizationZSP(cs->flags, cs->a);
+			cs->flags->cy = 0;
+			cs->flags->ac = 0;
 			break;}
 		case 0xf7:{
-			optionsCPU->cycles = 11;
-			uint16_t ret = optionsCPU->pc + 1;
-			uint16_t sp = optionsCPU->sp;
-			optionsCPU->memory[sp - 1] = ret >> 8;
-			optionsCPU->memory[sp - 2] = ret;
-			optionsCPU->sp -= 2;
-			optionsCPU->pc = 0x0030;
+			cs->cycles = 11;
+			uint16_t ret = cs->pc + 1;
+			uint16_t sp = cs->sp;
+			cs->memory[sp - 1] = ret >> 8;
+			cs->memory[sp - 2] = ret;
+			cs->sp -= 2;
+			cs->pc = 0x0030;
 			return;
 			break;}
 		case 0xf8:{
-			optionsCPU->cycles = 5;
-			if(optionsCPU->flags->s)
+			cs->cycles = 5;
+			if(cs->flags->s)
 			{
-				uint16_t sp = optionsCPU->sp;
-				optionsCPU->pc = (optionsCPU->memory[sp + 1] << 8) | optionsCPU->memory[sp];
-				optionsCPU->sp += 2;
-				optionsCPU->cycles = 11;
+				uint16_t sp = cs->sp;
+				cs->pc = (cs->memory[sp + 1] << 8) | cs->memory[sp];
+				cs->sp += 2;
+				cs->cycles = 11;
 				return;
 			}
 			break;}
 		case 0xf9:{
-			optionsCPU->cycles = 5;
-			uint16_t HL = (optionsCPU->h << 8) | optionsCPU->l;
-			optionsCPU->sp = HL;
+			cs->cycles = 5;
+			uint16_t HL = (cs->h << 8) | cs->l;
+			cs->sp = HL;
 			break;}
 		case 0xfa:{
-			optionsCPU->cycles = 10;
-			if(optionsCPU->flags->s)
+			cs->cycles = 10;
+			if(cs->flags->s)
 			{
-				uint16_t pc = optionsCPU->pc;
-				optionsCPU->pc = (optionsCPU->memory[pc + 2] << 8) | optionsCPU->memory[pc + 1];
+				uint16_t pc = cs->pc;
+				cs->pc = (cs->memory[pc + 2] << 8) | cs->memory[pc + 1];
 				return;
 			}
-			optionsCPU->pc += 2;
+			cs->pc += 2;
 			break;}
 		case 0xfb:
-			optionsCPU->cycles = 4;
-			optionsCPU->interrupt_enabled = 1;
+			cs->cycles = 4;
+			cs->interrupt_enabled = 1;
 			break;
 		case 0xfc:{
-			optionsCPU->cycles = 11;
-		 	uint16_t pc = optionsCPU->pc;
-			uint16_t adr = (optionsCPU->memory[pc + 2] << 8) | optionsCPU->memory[pc + 1];
-			if(optionsCPU->flags->s)
+			cs->cycles = 11;
+		 	uint16_t pc = cs->pc;
+			uint16_t adr = (cs->memory[pc + 2] << 8) | cs->memory[pc + 1];
+			if(cs->flags->s)
 			{
-				uint16_t ret = optionsCPU->pc + 3;
-				optionsCPU->memory[--optionsCPU->sp] = ret >> 8;
-				optionsCPU->memory[--optionsCPU->sp] = ret;
-				optionsCPU->pc = adr; 
-				optionsCPU->cycles = 17;
+				uint16_t ret = cs->pc + 3;
+				cs->memory[--cs->sp] = ret >> 8;
+				cs->memory[--cs->sp] = ret;
+				cs->pc = adr; 
+				cs->cycles = 17;
 				return;
 			}
-			optionsCPU->pc += 2;
+			cs->pc += 2;
 			break;}
 		case 0xfd:
-			optionsCPU->cycles = 4;
+			cs->cycles = 4;
 			break;
 		case 0xfe:{
-			optionsCPU->cycles = 7;
-			uint8_t v = optionsCPU->memory[++optionsCPU->pc];
-			uint16_t res  = optionsCPU->a - v;
+			cs->cycles = 7;
+			uint8_t v = cs->memory[++cs->pc];
+			uint16_t res  = cs->a - v;
 			uint8_t res8  = res & 0xFF;
-			optionsCPU->flags->ac = ((optionsCPU->a ^ v ^ res8) & 0x10) != 0;
-			ResetFlagsToZeroZSP(optionsCPU->flags);
-			FlagOptimizationZSP(optionsCPU->flags, res8);
-			optionsCPU->flags->cy = optionsCPU->a < v;
+			cs->flags->ac = ((cs->a ^ v ^ res8) & 0x10) != 0;
+			ResetFlagsToZeroZSP(cs->flags);
+			FlagOptimizationZSP(cs->flags, res8);
+			cs->flags->cy = cs->a < v;
 			break;}
 		case 0xff:{
-			optionsCPU->cycles = 11;
-			uint16_t ret = optionsCPU->pc + 1;
-			uint16_t sp = optionsCPU->sp;
-			optionsCPU->memory[sp - 1] = ret >> 8;
-			optionsCPU->memory[sp - 2] = ret;
-			optionsCPU->sp -= 2;
-			optionsCPU->pc = 0x0038;
+			cs->cycles = 11;
+			uint16_t ret = cs->pc + 1;
+			uint16_t sp = cs->sp;
+			cs->memory[sp - 1] = ret >> 8;
+			cs->memory[sp - 2] = ret;
+			cs->sp -= 2;
+			cs->pc = 0x0038;
 			return;
 			break;}
 		default:
-			UnimplementedInstruction(optionsCPU);
+			UnimplementedInstruction(cs);
 			break;
 	};
 
-	optionsCPU->pc++;
+	cs->pc++;
 }
